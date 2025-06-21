@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NextEdge Solutions - Your Digital Vision, Our Expert Execution.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+            overflow-x: hidden; /* Prevent horizontal scroll due to animations */
+        }
+
+        h1, h2, h3 {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Custom, more sophisticated animations */
+        @keyframes fadeInScaleUp {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes rotateIn {
+            from {
+                opacity: 0;
+                transform: rotate(-15deg) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: rotate(0deg) scale(1);
+            }
+        }
+
+        @keyframes typewriter {
+            from {
+                width: 0;
+            }
+            to {
+                width: 100%;
+            }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: white }
+        }
+
+        .animate-fade-in-scale-up {
+            animation: fadeInScaleUp 1s ease-out forwards;
+        }
+
+        .animate-slide-in-right {
+            animation: slideInRight 0.8s ease-out forwards;
+        }
+
+        .animate-slide-in-left {
+            animation: slideInLeft 0.8s ease-out forwards;
+        }
+
+        .animate-rotate-in {
+            animation: rotateIn 0.9s ease-out forwards;
+        }
+
+        .animate-typewriter {
+            overflow: hidden; /* Ensures the content is not revealed until the animation */
+            white-space: nowrap; /* Keeps the content on a single line */
+            border-right: .15em solid orange; /* The typewriter cursor */
+            animation:
+                typewriter 2.5s steps(40, end),
+                blink-caret .75s step-end infinite;
+        }
+
+        /* Initial hidden state for scroll animations */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .animate-on-scroll.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Hero section specific styling */
+        .hero-background {
+            background-image: url('https://images.unsplash.com/photo-1510519138101-570d1dca3d6b?q=80&w=2047&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'); /* More professional image */
+            background-size: cover;
+            background-position: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            filter: blur(3px) brightness(0.6); /* Enhanced blur and darkening */
+            z-index: 0;
+            transform: scale(1.05); /* Slight initial scale for a subtle zoom-out effect */
+            animation: heroBackgroundZoom 30s infinite alternate;
+        }
+
+        @keyframes heroBackgroundZoom {
+            from {
+                transform: scale(1.05);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); /* Dark overlay */
+            background-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.8) 100%); /* Radial gradient for depth */
+            z-index: 1;
+        }
+
+        /* Why Us section parallax */
+        .why-us-parallax {
+            background-image: url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'); /* Another professional background */
+            background-attachment: fixed; /* Parallax effect */
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            z-index: 0;
+        }
+        .why-us-parallax::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom right, rgba(79, 70, 229, 0.7), rgba(139, 92, 246, 0.7)); /* Overlay gradient */
+            z-index: 1;
+        }
+        .why-us-parallax > div {
+            position: relative;
+            z-index: 2;
+        }
+
+
+        /* WhatsApp floating button */
+        .whatsapp-button {
+            position: fixed;
+            bottom: 2rem; /* Adjusted to be at the bottom right, away from the removed bar */
+            right: 2rem;
+            background-color: #25D366; /* WhatsApp green */
+            color: white;
+            border-radius: 9999px;
+            padding: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Stronger shadow */
+            transition: transform 0.3s ease-in-out, background-color 0.3s ease-in-out;
+            z-index: 1000;
+        }
+
+        .whatsapp-button:hover {
+            transform: scale(1.15) rotate(5deg); /* More dynamic hover */
+            background-color: #1DA851; /* Darker green on hover */
+        }
+
+        /* Mobile menu specific styles */
+        .nav-menu.hidden-mobile {
+            display: none;
+        }
+        @media (min-width: 768px) {
+            .nav-menu.hidden-mobile {
+                display: flex !important; /* Override hidden on desktop */
+            }
+        }
+
+        /* New Logo Styles */
+        .text-logo-container {
+            /* Adjust padding to control distance from edge */
+            padding-left: 1rem; /* Example: 16px padding from left edge */
+            padding-top: 0.5rem; /* Vertical alignment */
+            padding-bottom: 0.5rem; /* Vertical alignment */
+        }
+        .text-logo {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            line-height: 1; /* Adjust to ensure elements stay close if needed */
+        }
+        .text-logo .highlight {
+            color: #1E90FF; /* or #1A73E8 (Google Blue) */
+            font-weight: normal;
+            letter-spacing: 2px;
+            font-size: 1rem;
+            display: block;
+            margin-top: 5px; /* Adjusted to create proper distance */
+        }
+        .text-logo .circuit-n {
+            font-family: monospace;
+            font-size: 3rem;
+            color: white;
+            margin-right: 10px;
+        }
+
+        /* Adjustments for smaller screens to keep logo readable */
+        @media (max-width: 767px) {
+            .text-logo {
+                font-size: 1.5rem;
+            }
+            .text-logo .circuit-n {
+                font-size: 2rem;
+            }
+            .text-logo .highlight {
+                font-size: 0.6rem;
+                margin-top: 4px;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-200 bg-gray-950 min-h-screen flex flex-col">
+
+    <header class="bg-gray-900 shadow-xl py-4 px-6 md:px-12 sticky top-0 z-50 transition-all duration-300">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="#" class="flex items-center">
+                <div class="text-logo-container">
+                    <div class="text-logo">
+                        <span class="circuit-n">A</span>NextEdge
+                        <span class="highlight">SOLUTIONS</span>
+                    </div>
+                </div>
+            </a>
+            <div class="md:hidden">
+                <button id="mobile-menu-button" class="text-white focus:outline-none p-2 rounded-md hover:bg-gray-700 transition-colors duration-200">
+                    <svg id="menu-icon" class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                    <svg id="close-icon" class="h-8 w-8 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <nav id="nav-menu" class="nav-menu hidden-mobile absolute md:relative top-full left-0 w-full bg-gray-900 md:bg-transparent shadow-md md:shadow-none p-4 md:p-0 transition-all duration-300 ease-in-out transform md:translate-y-0 md:flex md:justify-end">
+                <ul class="flex flex-col md:flex-row md:space-x-8 space-y-4 md:space-y-0 text-lg md:justify-end">
+                    <li><a href="#home" class="text-gray-200 hover:text-purple-300 transition-colors duration-300 block py-2 px-3 rounded-md">Home</a></li>
+                    <li><a href="#services" class="text-gray-200 hover:text-purple-300 transition-colors duration-300 block py-2 px-3 rounded-md">Services</a></li>
+                    <li><a href="#why-us" class="text-gray-200 hover:text-purple-300 transition-colors duration-300 block py-2 px-3 rounded-md">Why Choose Us</a></li>
+                    <li><a href="#portfolio" class="text-gray-200 hover:text-purple-300 transition-colors duration-300 block py-2 px-3 rounded-md">Portfolio</a></li>
+                    <li><a href="#about" class="text-gray-200 hover:text-purple-300 transition-colors duration-300 block py-2 px-3 rounded-md">Career</a></li>
+                    <li><a href="#contact" class="text-gray-200 hover:text-purple-300 transition-colors duration-300 block py-2 px-3 rounded-md">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section id="home" class="relative text-white py-20 md:py-32 flex-grow flex items-center justify-center text-center overflow-hidden">
+        <div class="hero-background"></div>
+        <div class="hero-overlay"></div>
+
+        <div class="container mx-auto px-6 z-10 relative">
+            <p class="text-sm md:text-base uppercase tracking-widest text-gray-300 mb-4 animate-fade-in-scale-up" style="animation-delay: 0.2s;">
+                Premium Web Design & Development Agency
+            </p>
+            <h1 class="text-4xl md:text-7xl font-extrabold leading-tight mb-6 uppercase animate-fade-in-scale-up" style="animation-delay: 0.4s;">
+                We Grow <br class="md:hidden"> Brands Online
+            </h1>
+            <p id="hero-subtitle" class="text-lg md:text-xl mb-10 max-w-3xl mx-auto opacity-90 text-transparent animate-typewriter" style="animation-delay: 0.8s; animation-fill-mode: forwards;">
+                Custom Websites, Branding & Digital Marketing
+            </p>
+            <a href="#contact" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 font-bold py-3 px-8 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 inline-flex items-center group animate-fade-in-scale-up" style="animation-delay: 1.2s;">
+                REQUEST A QUOTE
+                <svg class="ml-2 w-5 h-5 text-white group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </a>
+        </div>
+    </section>
+
+    <section class="bg-gray-900 py-8 relative z-10">
+        <div class="container mx-auto px-6 flex flex-col md:flex-row justify-around items-center text-center space-y-6 md:space-y-0 md:space-x-8">
+            <div class="flex flex-col items-center space-y-2 animate-on-scroll">
+                <img src="https://assets-global.website-files.com/62e089d7145749f05a9be740/62e49c719e794931a7888746_designrush-logo.png" alt="DesignRush Logo" class="h-10 opacity-70 filter grayscale hover:grayscale-0 transition-all duration-300">
+                <p class="text-lg text-gray-300 font-semibold">5 Star DesignRush Reviews</p>
+                <div class="flex text-yellow-400">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.538 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.783.57-1.838-.197-1.538-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.929 8.72c-.783-.57-.381-1.81.588-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.538 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.783.57-1.838-.197-1.538-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.929 8.72c-.783-.57-.381-1.81.588-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.538 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.783.57-1.838-.197-1.538-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.929 8.72c-.783-.57-.381-1.81.588-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.538 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.783.57-1.838-.197-1.538-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.929 8.72c-.783-.57-.381-1.81.588-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.538 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.783.57-1.838-.197-1.538-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.929 8.72c-.783-.57-.381-1.81.588-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z"></path></svg>
+                </div>
+            </div>
+            <div class="hidden md:block h-16 w-px bg-gray-600"></div>
+            <div class="flex flex-col items-center space-y-2 animate-on-scroll" style="animation-delay: 0.2s;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/b/bc/Forbes_2018_logo.svg" alt="Forbes Logo" class="h-10 opacity-70 filter grayscale hover:grayscale-0 transition-all duration-300">
+                <p class="text-lg text-gray-300 font-semibold">Recognized by Forbes</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="services" class="py-16 md:py-24 bg-gradient-to-br from-gray-900 to-gray-950">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-50 mb-12 animate-on-scroll">Our Core Services</h2>
+            <p class="text-lg text-gray-300 mb-16 max-w-2xl mx-auto animate-on-scroll" style="animation-delay: 0.2s;">
+                We offer a comprehensive suite of digital services designed to elevate your brand and drive measurable results.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <div class="bg-gray-800 p-8 rounded-lg shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:-translate-y-2 animate-on-scroll">
+                    <div class="text-purple-400 mb-4 text-5xl">
+                        <svg class="mx-auto w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3">Web Design & Development</h3>
+                    <p class="text-gray-300 leading-relaxed">
+                        Crafting stunning, responsive, and high-performing websites tailored to your brand's unique needs. From captivating designs to robust functionalities.
+                    </p>
+                </div>
+
+                <div class="bg-gray-800 p-8 rounded-lg shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:-translate-y-2 animate-on-scroll" style="animation-delay: 0.1s;">
+                    <div class="text-purple-400 mb-4 text-5xl">
+                        <svg class="mx-auto w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8L11 20m-9-1h9m-9 0a2 2 0 110-4m0 4a2 2 0 100-4m-9 4h9"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3">Digital Marketing</h3>
+                    <p class="text-gray-300 leading-relaxed">
+                        Driving targeted traffic and maximizing conversions with SEO, SMM, content marketing, and paid advertising strategies.
+                    </p>
+                </div>
+
+                <div class="bg-gray-800 p-8 rounded-lg shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:-translate-y-2 animate-on-scroll" style="animation-delay: 0.2s;">
+                    <div class="text-purple-400 mb-4 text-5xl">
+                        <svg class="mx-auto w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10v11l6-3 6 3 6-3V10M3 10V6a2 2 0 012-2h14a2 2 0 012 2v4M3 10h18"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3">Branding & Identity</h3>
+                    <p class="text-gray-300 leading-relaxed">
+                        Building a powerful and memorable brand presence with unique logos, visual guidelines, and consistent messaging.
+                    </p>
+                </div>
+
+                <div class="bg-gray-800 p-8 rounded-lg shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:-translate-y-2 animate-on-scroll" style="animation-delay: 0.3s;">
+                    <div class="text-purple-400 mb-4 text-5xl">
+                        <svg class="mx-auto w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3">E-commerce Solutions</h3>
+                    <p class="text-gray-300 leading-relaxed">
+                        Developing secure, scalable, and user-friendly online stores that convert visitors into loyal customers.
+                    </p>
+                </div>
+
+                <div class="bg-gray-800 p-8 rounded-lg shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:-translate-y-2 animate-on-scroll" style="animation-delay: 0.4s;">
+                    <div class="text-purple-400 mb-4 text-5xl">
+                        <svg class="mx-auto w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h4c0 0 0 0 0 0h4l-1-1-1.75-3M13 20h1l1-1h4.75a1 1 0 00.914-1.406L19 14M12 20V4M10 4h3a2 2 0 012 2v1M9 4h6"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3">UI/UX Design</h3>
+                    <p class="text-gray-300 leading-relaxed">
+                        Creating intuitive and engaging user interfaces and experiences that delight your audience and enhance usability.
+                    </p>
+                </div>
+
+                <div class="bg-gray-800 p-8 rounded-lg shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:-translate-y-2 animate-on-scroll" style="animation-delay: 0.5s;">
+                    <div class="text-purple-400 mb-4 text-5xl">
+                        <svg class="mx-auto w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3">Content Creation</h3>
+                    <p class="text-gray-300 leading-relaxed">
+                        Developing compelling and high-quality content strategies, including copywriting, visuals, and multimedia.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="why-us" class="why-us-parallax py-16 md:py-24 text-white relative overflow-hidden">
+        <div class="container mx-auto px-6 text-center relative z-20">
+            <h2 class="text-3xl md:text-4xl font-bold mb-12 animate-on-scroll">Why Choose NextEdge Solutions?</h2>
+            <p class="text-lg mb-16 max-w-2xl mx-auto opacity-90 animate-on-scroll" style="animation-delay: 0.2s;">
+                We are more than just a digital agency; we are your strategic partner in navigating the complex digital landscape.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16">
+                <div class="flex items-start text-left animate-on-scroll">
+                    <div class="flex-shrink-0 text-purple-300 mr-5 text-4xl">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.001 12.001 0 002.92 12c0 2.895 1.144 5.617 3.04 7.618L12 21.056l6.04-3.04A12.001 12.001 0 0021.08 12c0-2.895-1.144-5.617-3.04-7.618z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-2">Results-Driven Approach</h3>
+                        <p class="text-gray-200 opacity-90">
+                            Our primary focus is on delivering tangible results. We align our strategies with your business objectives to ensure maximum ROI.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-start text-left animate-on-scroll" style="animation-delay: 0.1s;">
+                    <div class="flex-shrink-0 text-purple-300 mr-5 text-4xl">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-2">Expert Team</h3>
+                        <p class="text-gray-200 opacity-90">
+                            Our team comprises seasoned professionals passionate about digital innovation and committed to excellence in every project.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-start text-left animate-on-scroll" style="animation-delay: 0.2s;">
+                    <div class="flex-shrink-0 text-purple-300 mr-5 text-4xl">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-2">Transparent Communication</h3>
+                        <p class="text-gray-200 opacity-90">
+                            We believe in clear, honest communication. You'll be informed and involved at every stage of your project.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-start text-left animate-on-scroll" style="animation-delay: 0.3s;">
+                    <div class="flex-shrink-0 text-purple-300 mr-5 text-4xl">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 21h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-2">Customized Solutions</h3>
+                        <p class="text-gray-200 opacity-90">
+                            No one-size-fits-all. We craft bespoke strategies and solutions that perfectly align with your unique vision and goals.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="portfolio" class="py-16 md:py-24 bg-gray-950">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-50 mb-12 animate-on-scroll">Our Recent Work</h2>
+            <p class="text-lg text-gray-300 mb-16 max-w-2xl mx-auto animate-on-scroll" style="animation-delay: 0.2s;">
+                Explore a selection of our successful projects that showcase our expertise in design, development, and digital marketing.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden transform transition-transform duration-300 hover:scale-105 animate-on-scroll">
+                    <img src="https://images.unsplash.com/photo-1542744095-fcf52d7ee170?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Project 1" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-white mb-2">E-commerce Platform Redesign</h3>
+                        <p class="text-gray-300 mb-4">A complete overhaul of an online retail platform, focusing on user experience and conversion optimization.</p>
+                        <a href="#" class="text-purple-400 hover:text-purple-300 font-semibold flex items-center justify-center">
+                            View Project
+                            <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden transform transition-transform duration-300 hover:scale-105 animate-on-scroll" style="animation-delay: 0.1s;">
+                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Project 2" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-white mb-2">Corporate Website Development</h3>
+                        <p class="text-gray-300 mb-4">Developed a sleek and informative corporate website for a B2B service provider, enhancing their online presence.</p>
+                        <a href="#" class="text-purple-400 hover:text-purple-300 font-semibold flex items-center justify-center">
+                            View Project
+                            <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-8 rounded-lg shadow-xl overflow-hidden transform transition-transform duration-300 hover:scale-105 animate-on-scroll" style="animation-delay: 0.2s;">
+                    <img src="https://images.unsplash.com/photo-1557804506-669a67965da0?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Project 3" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-white mb-2">Digital Marketing Campaign</h3>
+                        <p class="text-gray-300 mb-4">Executed a multi-channel digital marketing campaign resulting in significant lead generation and brand awareness.</p>
+                        <a href="#" class="text-purple-400 hover:text-purple-300 font-semibold flex items-center justify-center">
+                            View Project
+                            <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-16 animate-on-scroll">
+                <a href="#contact" class="bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600 font-bold py-3 px-8 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 inline-flex items-center group">
+                    SEE MORE PROJECTS
+                    <svg class="ml-2 w-5 h-5 text-white group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="py-16 md:py-24 bg-gradient-to-br from-gray-900 to-gray-950">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-50 mb-12 animate-on-scroll">Join Our Team</h2>
+            <p class="text-lg text-gray-300 mb-16 max-w-2xl mx-auto animate-on-scroll" style="animation-delay: 0.2s;">
+                Are you passionate about digital innovation and driven to create impact? Explore career opportunities with NextEdge Solutions.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div class="bg-gray-800 p-8 rounded-lg shadow-xl text-left animate-on-scroll">
+                    <h3 class="text-2xl font-bold text-white mb-4">Why Work With Us?</h3>
+                    <ul class="list-disc list-inside text-gray-300 space-y-2">
+                        <li>Innovative and challenging projects</li>
+                        <li>Collaborative and supportive work environment</li>
+                        <li>Opportunities for professional growth and learning</li>
+                        <li>Competitive compensation and benefits</li>
+                        <li>Work with cutting-edge technologies</li>
+                    </ul>
+                </div>
+                <div class="bg-gray-800 p-8 rounded-lg shadow-xl text-left animate-on-scroll" style="animation-delay: 0.1s;">
+                    <h3 class="text-2xl font-bold text-white mb-4">Current Openings</h3>
+                    <ul class="list-disc list-inside text-gray-300 space-y-2">
+                        <li>Front-End Developer (React/Vue.js)</li>
+                        <li>Back-End Developer (Node.js/Python)</li>
+                        <li>UI/UX Designer</li>
+                        <li>Digital Marketing Specialist (SEO/SEM)</li>
+                        <li>Project Manager</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-16 animate-on-scroll">
+                <a href="#contact" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 font-bold py-3 px-8 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 inline-flex items-center group">
+                    APPLY NOW
+                    <svg class="ml-2 w-5 h-5 text-white group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="py-16 md:py-24 bg-gray-900">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-50 mb-12 animate-on-scroll">Let's Build Something Amazing Together</h2>
+            <p class="text-lg text-gray-300 mb-16 max-w-2xl mx-auto animate-on-scroll" style="animation-delay: 0.2s;">
+                Ready to transform your digital presence? Contact us today for a free consultation and quote.
+            </p>
+
+            <div class="max-w-2xl mx-auto bg-gray-800 p-8 rounded-lg shadow-2xl animate-on-scroll">
+                <form class="space-y-6">
+                    <div>
+                        <label for="name" class="block text-left text-gray-300 text-sm font-bold mb-2">Name</label>
+                        <input type="text" id="name" name="name" class="w-full px-4 py-3 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500 transition-colors duration-200" placeholder="Your Name" required>
+                    </div>
+                    <div>
+                        <label for="email" class="block text-left text-gray-300 text-sm font-bold mb-2">Email</label>
+                        <input type="email" id="email" name="email" class="w-full px-4 py-3 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500 transition-colors duration-200" placeholder="your@example.com" required>
+                    </div>
+                    <div>
+                        <label for="phone" class="block text-left text-gray-300 text-sm font-bold mb-2">Phone (Optional)</label>
+                        <input type="tel" id="phone" name="phone" class="w-full px-4 py-3 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500 transition-colors duration-200" placeholder="+1 (XXX) XXX-XXXX">
+                    </div>
+                    <div>
+                        <label for="message" class="block text-left text-gray-300 text-sm font-bold mb-2">Message</label>
+                        <textarea id="message" name="message" rows="5" class="w-full px-4 py-3 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500 transition-colors duration-200" placeholder="Tell us about your project or inquiry..." required></textarea>
+                    </div>
+                    <button type="submit" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 font-bold py-3 px-10 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 inline-flex items-center group">
+                        SEND MESSAGE
+                        <svg class="ml-2 w-5 h-5 text-white group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+
+            <div class="mt-16 text-gray-400 text-center animate-on-scroll" style="animation-delay: 0.4s;">
+                <p class="text-xl font-semibold mb-4">Or reach out to us directly:</p>
+                <p class="text-lg">Email: <a href="mailto:info@nextedgesolutions.com" class="text-purple-300 hover:underline">info@nextedgesolutions.com</a></p>
+                <p class="text-lg">Phone: <a href="tel:+1-800-123-4567" class="text-purple-300 hover:underline">+1 (800) 123-4567</a></p>
+                <div class="flex justify-center space-x-6 mt-6">
+                    <a href="#" class="text-gray-400 hover:text-purple-400 transition-colors duration-300">
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.007-.533A8.349 8.349 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 10.43c-.004.037-.006.075-.006.113 0 4.406 3.13 8.02 7.246 8.832a4.12 4.12 0 01-1.815.07 4.109 4.109 0 003.834 2.85A8.233 8.233 0 012 18.106a11.66 11.66 0 006.29 2.145z"></path>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-purple-400 transition-colors duration-300">
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.83 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.529 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.93 0-1.09.39-1.984 1.029-2.675-.103-.253-.446-1.272.097-2.642 0 0 .84-.268 2.75 1.022A9.607 9.607 0 0112 6.865c.85.004 1.701.114 2.514.336 1.909-1.29 2.747-1.022 2.747-1.022.546 1.37.202 2.39.097 2.642.64.691 1.029 1.585 1.029 2.675 0 3.823-2.339 4.672-4.569 4.92.359.307.678.915.678 1.846 0 1.338-.012 2.419-.012 2.747 0 .268.18.576.687.483C21.133 20.2 24 16.443 24 12.017 24 6.484 19.522 2 14 2h-2z" clip-rule="evenodd"></path>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-purple-400 transition-colors duration-300">
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M16.333 3H7.667C4.54 3 2 5.429 2 8.5v7C2 18.571 4.54 21 7.667 21h8.666C19.46 21 22 18.571 22 15.5v-7C22 5.429 19.46 3 16.333 3zM12 16.667a4.667 4.667 0 110-9.334 4.667 4.667 0 010 9.334zM17.333 7.333a1.333 1.333 0 100-2.666 1.333 1.333 0 000 2.666z"></path>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-purple-400 transition-colors duration-300">
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.776-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-900 py-8 px-6 md:px-12 text-gray-400 text-center border-t border-gray-800">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <p>&copy; 2023 NextEdge Solutions. All rights reserved.</p>
+            <div class="flex space-x-6">
+                <a href="#privacy" class="hover:text-purple-400 transition-colors duration-300">Privacy Policy</a>
+                <a href="#terms" class="hover:text-purple-400 transition-colors duration-300">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+
+    <a href="https://wa.me/YOURPHONENUMBER" class="whatsapp-button" target="_blank" aria-label="Chat with us on WhatsApp">
+        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12.04 2C7.304 2 3.402 5.86 3.402 10.518c0 1.488.397 2.977 1.178 4.295L3 21.002l5.042-1.34a8.68 8.68 0 003.998 1.033c4.736 0 8.638-3.86 8.638-8.518C20.678 5.86 16.776 2 12.04 2zm4.184 12.446l-.508.012c-.288.006-.632.012-.996-.12-.348-.138-1.077-.426-1.996-.864-.96-.46-1.992-1.39-2.934-2.828-.15-.24-.264-.384-.348-.48-.096-.12-.036-.288.06-.384.072-.072.144-.192.204-.264.06-.084.12-.192.192-.288a.6.6 0 00.06-.216c0-.036-.012-.072-.018-.108-.072-.18-.468-1.128-.66-1.572-.18-.438-.36-.372-.492-.378-.06 0-.12-.006-.18-.006-.156 0-.324.06-.492.228-.168.168-.648.624-.648 1.524 0 .9-.66 1.764-.66 1.836 0 .072.108.144.204.252l.06.072c.18.228.84 1.14 1.968 2.088 1.452 1.254 2.664 1.632 3.564 1.92.294.09.462.156.624.192.066.012.12.012.168.012.246 0 .618-.084.846-.264.228-.18.774-.756.882-1.116.108-.36.108-.66.078-.726-.03-.06-.108-.096-.228-.15z"/>
+        </svg>
+    </a>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile Menu Toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const navMenu = document.getElementById('nav-menu');
+            const menuIcon = document.getElementById('menu-icon');
+            const closeIcon = document.getElementById('close-icon');
+
+            mobileMenuButton.addEventListener('click', () => {
+                navMenu.classList.toggle('hidden-mobile');
+                menuIcon.classList.toggle('hidden');
+                closeIcon.classList.toggle('hidden');
+                // Toggle aria-expanded attribute for accessibility
+                const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true' || false;
+                mobileMenuButton.setAttribute('aria-expanded', !isExpanded);
+            });
+
+            // Close mobile menu when a link is clicked
+            document.querySelectorAll('#nav-menu a').forEach(item => {
+                item.addEventListener('click', () => {
+                    if (!navMenu.classList.contains('hidden-mobile')) {
+                        navMenu.classList.add('hidden-mobile');
+                        menuIcon.classList.remove('hidden');
+                        closeIcon.classList.add('hidden');
+                        mobileMenuButton.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            });
+
+            // Universal Scroll Animation
+            const animateOnScrollElements = document.querySelectorAll('.animate-on-scroll');
+
+            const observerOptions = {
+                root: null, // viewport
+                rootMargin: '0px',
+                threshold: 0.1 // 10% of element visible
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target); // Stop observing once animated
+                    }
+                });
+            }, observerOptions);
+
+            animateOnScrollElements.forEach(element => {
+                observer.observe(element);
+            });
+
+            // Typewriter effect for hero subtitle
+            const heroSubtitle = document.getElementById('hero-subtitle');
+            const text = heroSubtitle.textContent;
+            heroSubtitle.textContent = ''; // Clear content for animation
+            let i = 0;
+            const speed = 50; // typing speed in milliseconds
+
+            function typeWriter() {
+                if (i < text.length) {
+                    heroSubtitle.textContent += text.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, speed);
+                }
+            }
+            // Trigger typewriter after initial hero animations
+            setTimeout(() => {
+                heroSubtitle.classList.add('animate-typewriter');
+                heroSubtitle.style.color = 'white'; // Make text visible
+                typeWriter();
+            }, 1000); // Adjust delay to sync with main hero animations
+        });
+    </script>
+</body>
+</html>
