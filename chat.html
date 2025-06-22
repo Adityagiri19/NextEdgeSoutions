@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoulChat - Your Safe Space</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Custom CSS variables for pastel themes and dynamic theming */
+        :root {
+            --theme-primary: #87CEEB; /* Sky Blue (default) */
+            --theme-secondary: #B0E0E6; /* Mint (default) */
+            --theme-accent: #FFDAB9; /* Peach (default) */
+            --theme-text-dark: #333;
+            --theme-text-light: #fff;
+            --theme-bg-soft: #f7f7f7;
+            --theme-bubble-other: #e2e8f0; /* bg-slate-200 */
+            --theme-bubble-my: #d1fae5; /* bg-emerald-100 */
+            --theme-input-bg: #fff;
+        }
+
+        /* Mood-specific themes (now referred to as visual themes) */
+        body.theme-Comfort {
+            --theme-primary: #E6E6FA; /* Lavender */
+            --theme-secondary: #D8BFD8; /* Thistle */
+            --theme-accent: #DA70D6; /* Orchid */
+            --theme-bubble-my: #F3E5F5; /* light purple */
+        }
+        body.theme-Joy {
+            --theme-primary: #FFD700; /* Gold */
+            --theme-secondary: #FFFACD; /* Lemon Chiffon */
+            --theme-accent: #FFC107; /* Amber */
+            --theme-bubble-my: #FFF8DC; /* Cornsilk */
+        }
+        body.theme-Sadness {
+            --theme-primary: #6A5ACD; /* Slate Blue */
+            --theme-secondary: #B0C4DE; /* Light Steel Blue */
+            --theme-accent: #778899; /* Light Slate Gray */
+            --theme-bubble-my: #E6E6FA; /* Lavender */
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            /* Initial background will be set by JS based on currentMood/initial theme */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            color: var(--theme-text-dark);
+            transition: background 0.5s ease-in-out; /* Smooth theme transition */
+            overflow: hidden; /* Hide potential scrollbars from floating elements */
+        }
+
+        /* Main chat container */
+        .chat-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 768px; /* Max width for chat readability on large screens */
+            width: 100%;
+            margin: 0 auto; /* Center the chat container */
+            background-color: var(--theme-bg-soft);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden; /* Ensure rounded corners are respected */
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Chat messages area */
+        .chat-messages {
+            flex-grow: 1;
+            padding: 1rem;
+            overflow-y: auto; /* Enable scrolling for messages */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem; /* Space between message bubbles */
+            scroll-behavior: smooth;
+        }
+
+        /* Message bubble base */
+        .message-bubble {
+            max-width: 80%;
+            padding: 0.75rem 1.25rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            line-height: 1.4;
+            position: relative;
+            transition: transform 0.2s ease-out, opacity 0.2s ease-out; /* Fade-in animation */
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Fade-in animation for messages */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-bubble.sent {
+            background-color: var(--theme-bubble-my);
+            align-self: flex-end; /* Align to right */
+            border-bottom-right-radius: 0.5rem; /* Pointy end */
+        }
+
+        .message-bubble.received {
+            background-color: var(--theme-bubble-other);
+            align-self: flex-start; /* Align to left */
+            border-bottom-left-radius: 0.5rem; /* Pointy end */
+        }
+
+        .message-bubble .sender-info {
+            font-size: 0.75rem;
+            color: var(--theme-text-dark);
+            opacity: 0.7;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Message input area */
+        .message-input-area {
+            padding: 1rem;
+            background-color: var(--theme-input-bg);
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            border-bottom-left-radius: 1.5rem; /* Match chat container radius */
+            border-bottom-right-radius: 1.5rem; /* Match chat container radius */
+        }
+
+        .message-input {
+            border-radius: 2rem;
+            padding: 0.75rem 1.25rem;
+            background-color: var(--theme-bg-soft);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: var(--theme-text-dark);
+            resize: none; /* Disable textarea resize */
+            height: auto; /* Allow auto-resizing based on content */
+            min-height: 2.5rem; /* Minimum height */
+            max-height: 8rem; /* Max height before scrolling */
+            overflow-y: auto; /* Enable scroll if content exceeds max-height */
+        }
+
+        .send-button {
+            background-color: var(--theme-primary);
+            transition: background-color 0.3s ease-in-out, transform 0.1s ease-in-out;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .send-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Emoji reaction container */
+        .reaction-container {
+            position: absolute;
+            bottom: -1.25rem; /* Position below message bubble */
+            right: 0.5rem; /* Align to the right for received, left for sent */
+            display: flex;
+            gap: 0.25rem;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 1rem;
+            padding: 0.25rem 0.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transform: translateY(10px) scale(0.9);
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+            pointer-events: none; /* Allow clicks through when hidden */
+            z-index: 20; /* Above messages */
+        }
+
+        .message-bubble:hover .reaction-container {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto; /* Enable clicks when visible */
+        }
+
+        .reaction-container button {
+            font-size: 1.2rem;
+            padding: 0.25rem;
+            border-radius: 50%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.1s ease-in-out;
+        }
+
+        .reaction-container button:hover {
+            transform: scale(1.2);
+        }
+
+        /* Floating heart animation on send */
+        .floating-heart-send {
+            position: absolute;
+            font-size: 2rem;
+            color: var(--theme-accent);
+            opacity: 0;
+            animation: float-send 1s ease-out forwards;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        @keyframes float-send {
+            0% { transform: translateY(0) translateX(0) scale(0.5); opacity: 0.8; }
+            50% { transform: translateY(-50px) translateX(10px) scale(1); opacity: 0.6; }
+            100% { transform: translateY(-100px) translateX(20px) scale(1.5); opacity: 0; }
+        }
+
+        /* Daily reflection modal & Payment modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 90%;
+            width: 400px;
+            text-align: center;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease-out;
+        }
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+        
+        /* Ensure top bar sticks to top and chat messages fill remaining space */
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 30; /* Ensure it's above chat bubbles when scrolling */
+        }
+
+        /* Mobile specific adjustments */
+        @media (max-width: 767px) {
+            .chat-container {
+                border-radius: 0; /* Full width on mobile */
+                box-shadow: none;
+            }
+            body {
+                padding: 0; /* Remove body padding on mobile */
+            }
+            .top-bar {
+                padding: 1rem 1.5rem;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Daily Reflection Modal -->
+    <div id="daily-reflection-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="text-2xl font-bold mb-4 text-gray-800">Hello Soul,</h3>
+            <p class="text-lg text-gray-700 mb-6">What are you feeling today? Share your heart.</p>
+            <button id="close-reflection-modal-button" class="py-2 px-6 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors">Okay, I'll Share</button>
+        </div>
+    </div>
+
+    <!-- Payment Prompt Modal -->
+    <div id="payment-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="text-2xl font-bold mb-4 text-gray-800">Daily Limit Reached!</h3>
+            <p class="text-lg text-gray-700 mb-6">You've sent 30 messages today. To continue sharing and connecting, please consider subscribing to SoulChat Premium.</p>
+            <div class="flex flex-col sm:flex-row justify-center gap-3">
+                <button id="premium-button" class="py-2 px-6 bg-purple-500 text-white rounded-full hover:bg-purple-600 transition-colors shadow-md">Go Premium!</button>
+                <button id="close-payment-modal-button" class="py-2 px-6 bg-gray-300 text-gray-800 rounded-full hover:bg-gray-400 transition-colors shadow-md">Maybe Later</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <!-- Top Bar -->
+        <div class="top-bar bg-white p-4 rounded-t-xl shadow-sm flex items-center justify-between z-10">
+            <div class="flex items-center gap-2">
+                <span id="room-icon" class="text-3xl"></span> <!-- Dynamic mood icon -->
+                <h2 id="room-name" class="text-xl font-semibold text-gray-800"></h2>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-sm text-gray-500 hidden sm:block"><span id="active-users">0</span> people here</span>
+                <button id="theme-switcher-button" class="p-2 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 transition-colors" title="Switch Theme">
+                    <i class="fas fa-palette"></i>
+                </button>
+                <a href="index.html" class="text-gray-600 hover:text-gray-800 transition-colors" title="Go Home">
+                    <i class="fas fa-home text-xl"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Chat Messages Area -->
+        <div id="chat-messages" class="chat-messages">
+            <!-- Initial example messages (these will be replaced by live data once Firebase connects) -->
+            <div class="message-bubble received">
+                <div class="sender-info">🫂 GentleSoul42</div>
+                Hello everyone, feeling a bit overwhelmed today. Anyone else?
+                <div class="reaction-container">
+                    <button>🫂</button>
+                    <button>🤗</button>
+                    <button>❤️</button>
+                </div>
+            </div>
+            <div class="message-bubble sent">
+                <div class="sender-info">♀️ WiseRiver99</div>
+                <p>You're not alone. It's okay to feel that way. Sending you warmth!</p>
+                 <div class="reaction-container" style="right: auto; left: 0.5rem;">
+                    <button>🫂</button>
+                    <button>🤗</button>
+                    <button>❤️</button>
+                </div>
+            </div>
+             <div class="message-bubble received">
+                <div class="sender-info">♂️ BraveCloud10</div>
+                <p>Same here. This space really helps.</p>
+                <div class="reaction-container">
+                    <button>🫂</button>
+                    <button>🤗</button>
+                    <button>❤️</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Input Area -->
+        <div class="message-input-area">
+            <div class="flex items-center gap-3 mb-2">
+                <span id="post-limit-display" class="text-sm text-gray-600 flex-shrink-0">Posts left today: 30</span>
+                <div class="flex-grow border-b border-gray-200"></div> <!-- Separator -->
+            </div>
+            <div class="flex gap-2">
+                <textarea
+                    id="message-input"
+                    placeholder="Share your thoughts..."
+                    class="message-input flex-grow"
+                    rows="1"
+                ></textarea>
+                <button id="send-button" class="send-button w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js"; // Added Analytics import
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const roomNameElement = document.getElementById('room-name');
+            const roomIconElement = document.getElementById('room-icon');
+            const chatMessages = document.getElementById('chat-messages');
+            const messageInput = document.getElementById('message-input');
+            const sendButton = document.getElementById('send-button');
+            const postLimitDisplay = document.getElementById('post-limit-display');
+            
+            const dailyReflectionModal = document.getElementById('daily-reflection-modal');
+            const closeReflectionModalButton = document.getElementById('close-reflection-modal-button');
+            
+            const paymentModal = document.getElementById('payment-modal');
+            const premiumButton = document.getElementById('premium-button');
+            const closePaymentModalButton = document.getElementById('close-payment-modal-button');
+
+            const themeSwitcherButton = document.getElementById('theme-switcher-button');
+            const activeUsersElement = document.getElementById('active-users');
+
+            let currentNickname = '';
+            let currentRoomMood = ''; // This will store the *actual* room mood (e.g., "Comfort")
+            let currentGenderSymbol = '';
+            let messagesSentToday = 0;
+            const MAX_POSTS_PER_DAY = 30;
+
+            let db; // Firestore instance
+            let auth; // Auth instance
+            let userId; // Current user's anonymous ID
+            let analytics; // Analytics instance
+
+            // --- Firebase Initialization ---
+            // ===========================================================================
+            // YOUR ACTUAL FIREBASE CONFIGURATION - REPLACED WITH USER PROVIDED VALUES
+            // ===========================================================================
+            const firebaseConfig = {
+              apiKey: "AIzaSyAIerQSDRGPsULxT-24e1kJnPN3bOD5lFo",
+              authDomain: "soulchat-app.firebaseapp.com",
+              projectId: "soulchat-app",
+              storageBucket: "soulchat-app.firebasestorage.app",
+              messagingSenderId: "595441139618",
+              appId: "1:595441139618:web:56eb81bb3d6bde776c3cfb",
+              measurementId: "G-61G3ZDNXJZ"
+            };
+
+            // For local testing and GitHub Pages, we will use the same path segments as defined in the rules.
+            const initialAuthToken = null;
+            // ===========================================================================
+
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                analytics = getAnalytics(app); // Initialize Analytics here
+
+                // Authenticate anonymously
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("Firebase Authenticated! User ID:", userId);
+                        // Start real-time listeners and other data-dependent functions after auth
+                        setupRealtimeChat();
+                    } else {
+                        console.warn("No user signed in. Real-time chat features may be limited.");
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error initializing Firebase or authenticating:", error);
+                // Display a user-friendly error message or fallback UI
+                chatMessages.innerHTML = `<div class="text-center text-red-500 mt-8">Failed to load chat. Please try again later. (Check console for details).</div>`;
+                messageInput.disabled = true;
+                sendButton.disabled = true;
+            }
+
+
+            // --- URL Parameter Parsing ---
+            const urlParams = new URLSearchParams(window.location.search);
+            currentNickname = urlParams.get('nickname') || 'AnonymousSoul';
+            currentRoomMood = urlParams.get('mood') || 'Comfort'; // Default to Comfort if mood not specified
+            currentGenderSymbol = urlParams.get('genderSymbol') || '';
+
+            // --- Moods for Room (Fixed once entered) ---
+            const roomMoods = { // Defines the actual rooms and their fixed icons
+                "Comfort": { icon: "🫂" },
+                "Joy": { icon: "😊" },
+                "Sadness": { icon: "😔" }
+            };
+
+            // --- Themes for Visual Switching ---
+            const visualThemes = { // Defines the visual themes and their corresponding CSS classes
+                "Comfort": { class: "theme-Comfort" },
+                "Joy": { class: "theme-Joy" },
+                "Sadness": { class: "theme-Sadness" }
+            };
+            const themeNamesOrder = ["Comfort", "Joy", "Sadness"]; // Order for cycling through themes
+
+            // Set the room name and icon based on the initial mood
+            const initialRoomInfo = roomMoods[currentRoomMood];
+            roomNameElement.textContent = currentRoomMood + " Room";
+            roomIconElement.textContent = initialRoomInfo.icon;
+
+            // Apply the initial theme to the body
+            let currentThemeName = currentRoomMood; // Start with the room's mood as the initial visual theme
+            document.body.classList.add(visualThemes[currentThemeName].class);
+
+            // --- Active Users Placeholder ---
+            activeUsersElement.textContent = '...'; 
+
+            // --- Message Sending Functionality (UPDATED FOR FIREBASE) ---
+            async function sendMessage() {
+                const messageText = messageInput.value.trim();
+                if (messageText === '') return;
+
+                if (!userId) {
+                    console.error("User not authenticated, cannot send message.");
+                    // Potentially show a modal asking user to refresh or check connection
+                    return;
+                }
+
+                if (messagesSentToday >= MAX_POSTS_PER_DAY) {
+                    showPaymentModal(); // Show payment modal instead of alert
+                    return;
+                }
+
+                try {
+                    // Add message to Firestore
+                    // PATH ADJUSTED TO MATCH THE NEW FIRESTORE RULES: /chat_rooms/{mood}/messages/{messageId}
+                    await addDoc(collection(db, `chat_rooms/${currentRoomMood}/messages`), {
+                        userId: userId,
+                        nickname: currentNickname,
+                        genderSymbol: currentGenderSymbol,
+                        text: messageText,
+                        timestamp: serverTimestamp() // Firestore's server timestamp
+                    });
+
+                    messageInput.value = ''; // Clear input
+                    adjustTextareaHeight(); // Reset textarea height
+                    messagesSentToday++;
+                    updatePostLimitDisplay();
+                    // scrollToBottom() will be handled by the onSnapshot listener for consistency
+
+                    // Add floating heart animation (only for the sender's UI)
+                    // We create a temporary invisible element to get the position before the message appears live via onSnapshot
+                    const tempInvisibleBubble = document.createElement('div');
+                    tempInvisibleBubble.style.cssText = 'position: absolute; visibility: hidden;';
+                    tempInvisibleBubble.classList.add('message-bubble', 'sent'); // Use sent class for positioning
+                    tempInvisibleBubble.innerHTML = `<div class="sender-info">${currentGenderSymbol ? currentGenderSymbol + ' ' : ''}${currentNickname}</div><p>${messageText}</p>`;
+                    chatMessages.appendChild(tempInvisibleBubble); // Temporarily add to DOM to get dimensions
+
+                    const rect = tempInvisibleBubble.getBoundingClientRect();
+                    const floatingHeart = document.createElement('div');
+                    floatingHeart.classList.add('floating-heart-send');
+                    floatingHeart.textContent = '�';
+                    document.body.appendChild(floatingHeart);
+                    
+                    // Position the heart relative to the bottom right of where the sent message *would* be
+                    floatingHeart.style.left = `${rect.right - 20}px`; 
+                    floatingHeart.style.top = `${rect.top}px`;
+
+                    floatingHeart.addEventListener('animationend', () => {
+                        floatingHeart.remove();
+                        tempInvisibleBubble.remove(); // Remove the temporary element after animation
+                    });
+
+
+                } catch (e) {
+                    console.error("Error adding document: ", e);
+                    // Inform user about send failure
+                    // Potentially show a temporary message bubble with "Failed to send"
+                }
+            }
+
+            // --- Real-time Chat Setup (Firestore Listener) ---
+            function setupRealtimeChat() {
+                // Clear initial example messages. This is important as Firebase will now populate them.
+                chatMessages.innerHTML = ''; 
+
+                // Query for messages, ordered by timestamp
+                // PATH ADJUSTED TO MATCH THE NEW FIRESTORE RULES: /chat_rooms/{mood}/messages/{messageId}
+                const q = query(collection(db, `chat_rooms/${currentRoomMood}/messages`), orderBy("timestamp"));
+                
+                // Set up real-time listener
+                onSnapshot(q, (snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === "added") {
+                            const message = change.doc.data();
+                            // Ensure message has a timestamp for consistent ordering
+                            if (message.timestamp) {
+                                console.log("New message:", message);
+                                displayMessage(message, change.doc.id); // Pass doc.id for potential future use (e.g., reactions)
+                            }
+                        }
+                        // For a full chat app, you'd also handle 'modified' (for reactions/edits)
+                        // and 'removed' (for deleted messages). For now, we only process 'added'.
+                    });
+                    scrollToBottom(); // Scroll after new messages are added
+                }, (error) => {
+                    console.error("Error listening to messages:", error);
+                    chatMessages.innerHTML = `<div class="text-center text-red-500 mt-8">Error loading messages. Check your Firebase rules and connection.</div>`;
+                });
+            }
+
+            // --- Display Message Function ---
+            function displayMessage(message, docId) {
+                const messageBubble = document.createElement('div');
+                messageBubble.classList.add('message-bubble', 'opacity-0'); // Add opacity-0 for fade-in
+                
+                // Determine if the message was sent by the current user
+                const isSentByCurrentUser = message.userId === userId;
+
+                if (isSentByCurrentUser) {
+                    messageBubble.classList.add('sent');
+                } else {
+                    messageBubble.classList.add('received');
+                }
+
+                // Construct sender info with gender symbol
+                const senderInfo = `${message.genderSymbol ? message.genderSymbol + ' ' : ''}${message.nickname}`;
+                
+                messageBubble.innerHTML = `
+                    <div class="sender-info">${senderInfo}</div>
+                    <p>${message.text}</p>
+                    <div class="reaction-container" style="${isSentByCurrentUser ? 'right: auto; left: 0.5rem;' : 'right: 0.5rem;'}">
+                        <button>🫂</button>
+                        <button>🤗</button>
+                        <button>❤️</button>
+                    </div>
+                `;
+                chatMessages.appendChild(messageBubble);
+                setTimeout(() => messageBubble.classList.remove('opacity-0'), 10); // Trigger fade-in
+            }
+
+            // --- Post Limit Logic (using localStorage for daily reset) ---
+            function updatePostLimitDisplay() {
+                const remaining = MAX_POSTS_PER_DAY - messagesSentToday;
+                postLimitDisplay.textContent = `Posts left today: ${remaining}`;
+                if (remaining <= 0) {
+                    messageInput.placeholder = "Daily limit reached. Go Premium!";
+                    messageInput.disabled = true;
+                    sendButton.disabled = true;
+                    sendButton.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    messageInput.placeholder = "Share your thoughts...";
+                    messageInput.disabled = false;
+                    sendButton.disabled = false;
+                    sendButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+
+            function checkDailyPostLimit() {
+                const lastPostDate = localStorage.getItem('soulchat_last_post_date');
+                const today = new Date().toDateString();
+
+                if (lastPostDate === today) {
+                    messagesSentToday = parseInt(localStorage.getItem('soulchat_posts_today') || '0');
+                } else {
+                    messagesSentToday = 0; // Reset for a new day
+                    localStorage.setItem('soulchat_last_post_date', today);
+                }
+                updatePostLimitDisplay();
+            }
+
+            // Save post count on send
+            sendButton.addEventListener('click', () => {
+                sendMessage();
+                localStorage.setItem('soulchat_posts_today', messagesSentToday.toString());
+            });
+
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault(); // Prevent new line
+                    sendButton.click();
+                }
+            });
+
+            // --- Auto-adjust textarea height ---
+            function adjustTextareaHeight() {
+                    messageInput.style.height = 'auto'; // Reset height
+                    messageInput.style.height = messageInput.scrollHeight + 'px'; // Set to scroll height
+                }
+            messageInput.addEventListener('input', adjustTextareaHeight);
+
+            // --- Auto-scroll to bottom, but pause on user scroll up ---
+            let isUserScrolling = false;
+            let scrollTimeout;
+
+            chatMessages.addEventListener('scroll', () => {
+                clearTimeout(scrollTimeout);
+                // Check if the user is scrolling up (more than 20px from bottom)
+                isUserScrolling = chatMessages.scrollHeight - chatMessages.clientHeight > chatMessages.scrollTop + 20; 
+                scrollTimeout = setTimeout(() => {
+                    isUserScrolling = false; // Reset after 0.5s of no scroll activity
+                }, 500); 
+            });
+
+            function scrollToBottom() {
+                if (!isUserScrolling) {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            }
+
+            // --- Daily Reflection Modal ---
+            function showDailyReflectionModal() {
+                const lastModalDate = localStorage.getItem('soulchat_last_modal_date');
+                const today = new Date().toDateString();
+
+                if (lastModalDate !== today) {
+                    dailyReflectionModal.classList.add('active');
+                    localStorage.setItem('soulchat_last_modal_date', today);
+                }
+            }
+
+            closeReflectionModalButton.addEventListener('click', () => {
+                dailyReflectionModal.classList.remove('active');
+            });
+
+            // --- Payment Prompt Modal ---
+            function showPaymentModal() {
+                paymentModal.classList.add('active');
+            }
+
+            closePaymentModalButton.addEventListener('click', () => {
+                paymentModal.classList.remove('active');
+            });
+
+            premiumButton.addEventListener('click', () => {
+                alert("Redirecting to premium subscription page! (Placeholder)");
+                paymentModal.classList.remove('active');
+                // In a real app, this would redirect to a payment gateway
+            });
+
+            // --- Theme Switcher Logic ---
+            const themeNamesOrder = ["Comfort", "Joy", "Sadness"]; // Order for cycling through themes
+            let currentThemeIndex = themeNamesOrder.indexOf(currentRoomMood); 
+            if (currentThemeIndex === -1) { // If the initial mood from URL is not one of the three, default to Comfort
+                currentThemeIndex = 0; // Comfort
+            }
+            let currentThemeName = themeNamesOrder[currentThemeIndex]; // Keep track of the currently active visual theme name
+
+            themeSwitcherButton.addEventListener('click', () => {
+                // Remove current theme class
+                document.body.classList.remove(visualThemes[currentThemeName].class);
+
+                // Move to next theme
+                currentThemeIndex = (currentThemeIndex + 1) % themeNamesOrder.length;
+                currentThemeName = themeNamesOrder[currentThemeIndex]; // Update current visual theme
+
+                // Apply new theme class
+                document.body.classList.add(visualThemes[currentThemeName].class);
+                // Important: Room name and icon remain unchanged, as they reflect the ROOM, not the visual theme.
+            });
+
+
+            // Initial calls
+            checkDailyPostLimit();
+            adjustTextareaHeight(); // Adjust for initial placeholder
+            // scrollToBottom() will be called by Firebase listener now
+            showDailyReflectionModal(); // Show modal on first visit of the day
+        });
+    </script>
+</body>
+</html>
+�
