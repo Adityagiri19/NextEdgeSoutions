@@ -298,29 +298,14 @@
             <div class="message-bubble received">
                 <div class="sender-info">🫂 GentleSoul42</div>
                 Hello everyone, feeling a bit overwhelmed today. Anyone else?
-                <div class="reaction-container">
-                    <button>🫂</button>
-                    <button>🤗</button>
-                    <button>❤️</button>
-                </div>
             </div>
             <div class="message-bubble sent">
                 <div class="sender-info">♀️ WiseRiver99</div>
                 <p>You're not alone. It's okay to feel that way. Sending you warmth!</p>
-                 <div class="reaction-container" style="right: auto; left: 0.5rem;">
-                    <button>🫂</button>
-                    <button>🤗</button>
-                    <button>❤️</button>
-                </div>
             </div>
              <div class="message-bubble received">
                 <div class="sender-info">♂️ BraveCloud10</div>
                 <p>Same here. This space really helps.</p>
-                <div class="reaction-container">
-                    <button>🫂</button>
-                    <button>🤗</button>
-                    <button>❤️</button>
-                </div>
             </div>
         </div>
 
@@ -486,14 +471,18 @@
                 }
 
                 try {
+                    // Generate a unique local ID for optimistic display
+                    const localMessageId = 'local-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
+
                     // Optimistically display message first for instant feedback
                     displayMessage({
                         userId: userId,
                         nickname: currentNickname,
                         genderSymbol: currentGenderSymbol,
                         text: messageText,
-                        timestamp: new Date() // Use current client time for optimistic display
-                    }, 'temp-id-for-optimistic', true); // Pass a temp ID and 'isOptimistic' flag
+                        timestamp: new Date(), // Use current client time for optimistic display
+                        localId: localMessageId // Pass localId for reconciliation
+                    }, localMessageId, true); // Pass localId as docId for optimistic
 
                     messageInput.value = ''; // Clear input
                     adjustTextareaHeight(); // Reset textarea height
@@ -531,24 +520,42 @@
                         const docId = change.doc.id;
 
                         if (change.type === "added") {
-                            // Only add if it's not the optimistic message already present
-                            // Or, if optimistic, update its actual ID if needed (for reactions, edits)
-                            const existingOptimistic = document.querySelector(`.message-bubble[data-temp-id="temp-id-for-optimistic"]`);
-                            if (existingOptimistic && message.userId === userId && change.doc.data().text === messageInput.value.trim()) {
-                                // If it's our message being confirmed, just update the ID if needed
-                                // For now, we simply let the onSnapshot handle it consistently
-                                // The new displayMessage logic will prevent duplicates or overwrite
+                            // Check if this is the current user's message and if an optimistic version exists
+                            // We compare userId and message text for a simple match
+                            if (message.userId === userId) {
+                                // Find any optimistic message by its localId
+                                // Note: We sent localId with the message, so we can try to find it
+                                const optimisticMessageElement = document.querySelector(`.message-bubble[data-local-id="${message.localId}"]`);
+                                
+                                if (optimisticMessageElement) {
+                                    // If found, update its attributes to be the real message
+                                    optimisticMessageElement.removeAttribute('data-local-id');
+                                    optimisticMessageElement.setAttribute('data-doc-id', docId);
+                                    // No need to re-append, just update attributes.
+                                    // This assumes the *content* hasn't changed.
+                                    console.log("Optimistic message confirmed and updated:", docId);
+                                    // Skip further display logic for this message, as it's already in DOM and updated
+                                    return;
+                                }
                             }
+                            // If not an optimistic message or no matching optimistic message found, display it
                             console.log("New message from Firestore:", message);
                             displayMessage(message, docId); 
                         } else if (change.type === "modified") {
                             // Handle message modifications (e.g., reactions, edits)
                             console.log("Modified message:", message);
                             // You would find the message bubble by docId and update its content
+                            const existingMessageElement = document.querySelector(`.message-bubble[data-doc-id="${docId}"]`);
+                            if (existingMessageElement) {
+                                existingMessageElement.querySelector('p').textContent = message.text; // Simple update
+                            }
                         } else if (change.type === "removed") {
                             // Handle message deletions
                             console.log("Removed message:", message);
-                            // You would find the message bubble by docId and remove it from DOM
+                            const existingMessageElement = document.querySelector(`.message-bubble[data-doc-id="${docId}"]`);
+                            if (existingMessageElement) {
+                                existingMessageElement.remove();
+                            }
                         }
                     });
                     scrollToBottom(); // Scroll after new messages are added/updated
@@ -559,20 +566,16 @@
             }
 
             // --- Display Message Function (Modified for consistency and optimistic flag) ---
-            function displayMessage(message, docId, isOptimistic = false) {
-                // Prevent duplicate messages if onSnapshot confirms an already optimistically displayed one
-                if (document.querySelector(`.message-bubble[data-doc-id="${docId}"]`) && !isOptimistic) {
-                    return; // Message already displayed by onSnapshot
-                }
-                // If it's an optimistic message, check if the real one has arrived
-                if (isOptimistic && document.querySelector(`.message-bubble[data-doc-id="${docId}"]`)) {
-                    return; // Real message arrived, no need for optimistic copy
-                }
-
-
+            function displayMessage(message, id, isOptimistic = false) {
+                // 'id' here can be a localId (for optimistic) or a Firestore docId (for real)
                 const messageBubble = document.createElement('div');
                 messageBubble.classList.add('message-bubble', 'opacity-0');
-                messageBubble.setAttribute('data-doc-id', docId); // Store Firestore document ID
+
+                if (isOptimistic) {
+                    messageBubble.setAttribute('data-local-id', id);
+                } else {
+                    messageBubble.setAttribute('data-doc-id', id);
+                }
 
                 // Determine if the message was sent by the current user
                 const isSentByCurrentUser = message.userId === userId;
@@ -588,12 +591,8 @@
                 messageBubble.innerHTML = `
                     <div class="sender-info">${senderInfo}</div>
                     <p>${message.text}</p>
-                    <div class="reaction-container" style="${isSentByCurrentUser ? 'right: auto; left: 0.5rem;' : 'right: 0.5rem;'}">
-                        <button>🫂</button>
-                        <button>🤗</button>
-                        <button>❤️</button>
-                    </div>
-                `;
+                `; // Removed reaction-container
+
                 chatMessages.appendChild(messageBubble);
                 setTimeout(() => messageBubble.classList.remove('opacity-0'), 10);
             }
@@ -634,7 +633,13 @@
 
             messageInput.addEventListener('input', () => {
                 adjustTextareaHeight();
-                debouncedSetTypingStatus(); // Signal typing
+                setTypingStatus(true); // Immediately set typing status on input
+                debouncedSetTypingStatus(); // Debounce the clear typing status
+            });
+            
+            // Listen for blur event to clear typing status if user leaves input field
+            messageInput.addEventListener('blur', () => {
+                setTypingStatus(false);
             });
 
             // Listen for typing indicators from others
@@ -649,7 +654,7 @@
                     snapshot.forEach(doc => {
                         const data = doc.data();
                         // Only show if it's not our own typing status AND it's recent (e.g., within 5 seconds)
-                        if (doc.id !== userId && data.timestamp && (now - data.timestamp.toMillis() < TYPING_TIMEOUT_MS * 2)) { // Allow a bit longer to account for network lag
+                        if (doc.id !== userId && data.timestamp && (now - data.timestamp.toMillis() < TYPING_TIMEOUT_MS * 2)) { 
                             typers.push(data.nickname);
                         }
                     });
