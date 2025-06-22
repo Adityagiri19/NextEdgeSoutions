@@ -57,11 +57,9 @@
             background: var(--theme-primary); /* Initial background, will be set by JS based on theme */
             display: flex;
             flex-direction: column;
-            /* Removed min-height: 100vh; and added height: 100% for better mobile adaptability */
             height: 100%; /* Ensure body fills its parent (html) */
             color: var(--theme-text-dark);
             transition: background 0.5s ease-in-out; /* Smooth theme transition */
-            /* overflow: hidden; kept at html/body level */
         }
 
         /* Main chat container */
@@ -75,7 +73,6 @@
             background-color: var(--theme-bg-soft);
             border-radius: 1.5rem;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            /* Removed overflow: hidden here, as chat-messages will manage scrolling */
             position: relative;
             z-index: 10;
             height: 100%; /* Ensure chat-container fills the body's height */
@@ -224,6 +221,20 @@
             z-index: 30; /* Ensure it's above chat bubbles when scrolling */
         }
 
+        /* Typing indicator styling */
+        .typing-indicator {
+            font-style: italic;
+            color: #6b7280; /* text-gray-500 */
+            padding-left: 0.5rem;
+            height: 1.5rem; /* Reserve space to prevent layout shift */
+            overflow: hidden;
+            transition: opacity 0.2s ease-in-out;
+            opacity: 0; /* Hidden by default */
+        }
+        .typing-indicator.active {
+            opacity: 1;
+        }
+
         /* Mobile specific adjustments */
         @media (max-width: 767px) {
             .chat-container {
@@ -313,6 +324,9 @@
             </div>
         </div>
 
+        <!-- Typing Indicator -->
+        <div id="typing-indicator" class="typing-indicator pl-4 text-sm text-gray-500 italic"></div>
+
         <!-- Message Input Area -->
         <div class="message-input-area">
             <div class="flex items-center gap-3 mb-2">
@@ -337,7 +351,7 @@
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
 
         // --- GLOBAL DECLARATIONS FOR THEME LOGIC ---
@@ -350,6 +364,10 @@
         let currentThemeIndex; 
         let currentThemeName;
 
+        // --- GLOBAL DECLARATIONS for Typing Indicator ---
+        let typingTimeout; // To manage the debounce for typing status
+        const TYPING_TIMEOUT_MS = 3000; // 3 seconds after last keypress to clear typing status
+
 
         document.addEventListener('DOMContentLoaded', async () => {
             const roomNameElement = document.getElementById('room-name');
@@ -358,6 +376,7 @@
             const messageInput = document.getElementById('message-input');
             const sendButton = document.getElementById('send-button');
             const postLimitDisplay = document.getElementById('post-limit-display');
+            const typingIndicatorElement = document.getElementById('typing-indicator'); // New: Typing Indicator element
             
             const dailyReflectionModal = document.getElementById('daily-reflection-modal');
             const closeReflectionModalButton = document.getElementById('close-reflection-modal-button');
@@ -381,9 +400,6 @@
             let analytics; // Analytics instance
 
             // --- Firebase Initialization ---
-            // ===========================================================================
-            // YOUR ACTUAL FIREBASE CONFIGURATION - REPLACED WITH USER PROVIDED VALUES
-            // ===========================================================================
             const firebaseConfig = {
               apiKey: "AIzaSyAIerQSDRGPsULxT-24e1kJnPN3bOD5lFo",
               authDomain: "soulchat-app.firebaseapp.com",
@@ -394,9 +410,7 @@
               measurementId: "G-61G3ZDNXJZ"
             };
 
-            // For local testing and GitHub Pages, we will use the same path segments as defined in the rules.
             const initialAuthToken = null;
-            // ===========================================================================
 
             try {
                 const app = initializeApp(firebaseConfig);
@@ -404,7 +418,6 @@
                 auth = getAuth(app);
                 analytics = getAnalytics(app); // Initialize Analytics here
 
-                // Authenticate anonymously
                 if (initialAuthToken) {
                     await signInWithCustomToken(auth, initialAuthToken);
                 } else {
@@ -415,8 +428,8 @@
                     if (user) {
                         userId = user.uid;
                         console.log("Firebase Authenticated! User ID:", userId);
-                        // Start real-time listeners and other data-dependent functions after auth
-                        setupRealtimeChat();
+                        setupRealtimeChat(); // Setup chat listener after auth
+                        setupTypingIndicatorListener(); // Setup typing listener after auth
                     } else {
                         console.warn("No user signed in. Real-time chat features may be limited.");
                     }
@@ -424,7 +437,6 @@
 
             } catch (error) {
                 console.error("Error initializing Firebase or authenticating:", error);
-                // Display a user-friendly error message or fallback UI
                 chatMessages.innerHTML = `<div class="text-center text-red-500 mt-8">Failed to load chat. Please try again later. (Check console for details).</div>`;
                 messageInput.disabled = true;
                 sendButton.disabled = true;
@@ -434,36 +446,31 @@
             // --- URL Parameter Parsing ---
             const urlParams = new URLSearchParams(window.location.search);
             currentNickname = urlParams.get('nickname') || 'AnonymousSoul';
-            currentRoomMood = urlParams.get('mood') || 'Comfort'; // Default to Comfort if mood not specified
+            currentRoomMood = urlParams.get('mood') || 'Comfort';
             currentGenderSymbol = urlParams.get('genderSymbol') || '';
 
             // --- Moods for Room (Fixed once entered) ---
-            const roomMoods = { // Defines the actual rooms and their fixed icons
+            const roomMoods = {
                 "Comfort": { icon: "🫂" },
                 "Joy": { icon: "😊" },
                 "Sadness": { icon: "😔" }
             };
 
-            // --- Initialize currentThemeIndex and currentThemeName here ---
-            // These assignments depend on currentRoomMood which is parsed from URL
             currentThemeIndex = themeNamesOrder.indexOf(currentRoomMood); 
-            if (currentThemeIndex === -1) { // If the initial mood from URL is not one of the three, default to Comfort
-                currentThemeIndex = 0; // Comfort
+            if (currentThemeIndex === -1) { 
+                currentThemeIndex = 0; 
             }
-            currentThemeName = themeNamesOrder[currentThemeIndex]; // Keep track of the currently active visual theme name
+            currentThemeName = themeNamesOrder[currentThemeIndex]; 
 
-            // Set the room name and icon based on the initial mood
             const initialRoomInfo = roomMoods[currentRoomMood];
             roomNameElement.textContent = currentRoomMood + " Room";
             roomIconElement.textContent = initialRoomInfo.icon;
 
-            // Apply the initial theme to the body
             document.body.classList.add(visualThemes[currentThemeName].class);
 
-            // --- Active Users Placeholder ---
             activeUsersElement.textContent = '...'; 
 
-            // --- Message Sending Functionality (UPDATED FOR FIREBASE) ---
+            // --- Message Sending Functionality ---
             async function sendMessage() {
                 const messageText = messageInput.value.trim();
                 if (messageText === '') return;
@@ -474,13 +481,29 @@
                 }
 
                 if (messagesSentToday >= MAX_POSTS_PER_DAY) {
-                    showPaymentModal(); // Show payment modal instead of alert
+                    showPaymentModal();
                     return;
                 }
 
                 try {
+                    // Optimistically display message first for instant feedback
+                    displayMessage({
+                        userId: userId,
+                        nickname: currentNickname,
+                        genderSymbol: currentGenderSymbol,
+                        text: messageText,
+                        timestamp: new Date() // Use current client time for optimistic display
+                    }, 'temp-id-for-optimistic', true); // Pass a temp ID and 'isOptimistic' flag
+
+                    messageInput.value = ''; // Clear input
+                    adjustTextareaHeight(); // Reset textarea height
+                    messagesSentToday++;
+                    updatePostLimitDisplay();
+                    
+                    // Clear typing status immediately after sending a message
+                    setTypingStatus(false);
+
                     // Add message to Firestore
-                    // PATH ADJUSTED TO MATCH THE NEW FIRESTORE RULES: /chat_rooms/{mood}/messages/{messageId}
                     await addDoc(collection(db, `chat_rooms/${currentRoomMood}/messages`), {
                         userId: userId,
                         nickname: currentNickname,
@@ -489,72 +512,68 @@
                         timestamp: serverTimestamp() // Firestore's server timestamp
                     });
 
-                    messageInput.value = ''; // Clear input
-                    adjustTextareaHeight(); // Reset textarea height
-                    messagesSentToday++;
-                    updatePostLimitDisplay();
-                    // scrollToBottom() will be handled by the onSnapshot listener for consistency
-
-                    // Add floating heart animation (only for the sender's UI)
-                    const tempInvisibleBubble = document.createElement('div');
-                    tempInvisibleBubble.style.cssText = 'position: absolute; visibility: hidden;';
-                    tempInvisibleBubble.classList.add('message-bubble', 'sent');
-                    tempInvisibleBubble.innerHTML = `<div class="sender-info">${currentGenderSymbol ? currentGenderSymbol + ' ' : ''}${currentNickname}</div><p>${messageText}</p>`;
-                    chatMessages.appendChild(tempInvisibleBubble);
-
-                    const rect = tempInvisibleBubble.getBoundingClientRect();
-                    const floatingHeart = document.createElement('div');
-                    floatingHeart.classList.add('floating-heart-send');
-                    floatingHeart.textContent = '💖'; // Corrected heart emoji
-                    document.body.appendChild(floatingHeart);
-                    
-                    floatingHeart.style.left = `${rect.right - 20}px`; 
-                    floatingHeart.style.top = `${rect.top}px`;
-
-                    floatingHeart.addEventListener('animationend', () => {
-                        floatingHeart.remove();
-                        tempInvisibleBubble.remove();
-                    });
-
-
                 } catch (e) {
                     console.error("Error adding document: ", e);
+                    // Handle error: potentially remove the optimistically added message
+                    // or show a "Failed to send" status on it.
                 }
             }
 
             // --- Real-time Chat Setup (Firestore Listener) ---
             function setupRealtimeChat() {
-                // Clear initial example messages. This is important as Firebase will now populate them.
-                chatMessages.innerHTML = ''; 
+                chatMessages.innerHTML = ''; // Clear initial example messages.
 
-                // Query for messages, ordered by timestamp
-                // PATH ADJUSTED TO MATCH THE NEW FIRESTORE RULES: /chat_rooms/{mood}/messages/{messageId}
                 const q = query(collection(db, `chat_rooms/${currentRoomMood}/messages`), orderBy("timestamp"));
                 
-                // Set up real-time listener
                 onSnapshot(q, (snapshot) => {
                     snapshot.docChanges().forEach((change) => {
+                        const message = change.doc.data();
+                        const docId = change.doc.id;
+
                         if (change.type === "added") {
-                            const message = change.doc.data();
-                            // Ensure message has a timestamp for consistent ordering
-                            if (message.timestamp) {
-                                console.log("New message:", message);
-                                displayMessage(message, change.doc.id); // Pass doc.id for potential future use (e.g., reactions)
+                            // Only add if it's not the optimistic message already present
+                            // Or, if optimistic, update its actual ID if needed (for reactions, edits)
+                            const existingOptimistic = document.querySelector(`.message-bubble[data-temp-id="temp-id-for-optimistic"]`);
+                            if (existingOptimistic && message.userId === userId && change.doc.data().text === messageInput.value.trim()) {
+                                // If it's our message being confirmed, just update the ID if needed
+                                // For now, we simply let the onSnapshot handle it consistently
+                                // The new displayMessage logic will prevent duplicates or overwrite
                             }
+                            console.log("New message from Firestore:", message);
+                            displayMessage(message, docId); 
+                        } else if (change.type === "modified") {
+                            // Handle message modifications (e.g., reactions, edits)
+                            console.log("Modified message:", message);
+                            // You would find the message bubble by docId and update its content
+                        } else if (change.type === "removed") {
+                            // Handle message deletions
+                            console.log("Removed message:", message);
+                            // You would find the message bubble by docId and remove it from DOM
                         }
                     });
-                    scrollToBottom(); // Scroll after new messages are added
+                    scrollToBottom(); // Scroll after new messages are added/updated
                 }, (error) => {
                     console.error("Error listening to messages:", error);
                     chatMessages.innerHTML = `<div class="text-center text-red-500 mt-8">Error loading messages. Check your Firebase rules and connection.</div>`;
                 });
             }
 
-            // --- Display Message Function ---
-            function displayMessage(message, docId) {
+            // --- Display Message Function (Modified for consistency and optimistic flag) ---
+            function displayMessage(message, docId, isOptimistic = false) {
+                // Prevent duplicate messages if onSnapshot confirms an already optimistically displayed one
+                if (document.querySelector(`.message-bubble[data-doc-id="${docId}"]`) && !isOptimistic) {
+                    return; // Message already displayed by onSnapshot
+                }
+                // If it's an optimistic message, check if the real one has arrived
+                if (isOptimistic && document.querySelector(`.message-bubble[data-doc-id="${docId}"]`)) {
+                    return; // Real message arrived, no need for optimistic copy
+                }
+
+
                 const messageBubble = document.createElement('div');
-                messageBubble.classList.add('message-bubble', 'opacity-0'); // Add opacity-0 for fade-in
-                
+                messageBubble.classList.add('message-bubble', 'opacity-0');
+                messageBubble.setAttribute('data-doc-id', docId); // Store Firestore document ID
+
                 // Determine if the message was sent by the current user
                 const isSentByCurrentUser = message.userId === userId;
 
@@ -564,7 +583,6 @@
                     messageBubble.classList.add('received');
                 }
 
-                // Construct sender info with gender symbol
                 const senderInfo = `${message.genderSymbol ? message.genderSymbol + ' ' : ''}${message.nickname}`;
                 
                 messageBubble.innerHTML = `
@@ -577,7 +595,75 @@
                     </div>
                 `;
                 chatMessages.appendChild(messageBubble);
-                setTimeout(() => messageBubble.classList.remove('opacity-0'), 10); // Trigger fade-in
+                setTimeout(() => messageBubble.classList.remove('opacity-0'), 10);
+            }
+
+            // --- Typing Indicator Logic ---
+            async function setTypingStatus(isTyping) {
+                if (!userId || !db || !currentRoomMood) return;
+
+                const typingDocRef = doc(db, `typing_indicators/${currentRoomMood}/${userId}`);
+
+                try {
+                    if (isTyping) {
+                        await setDoc(typingDocRef, {
+                            nickname: currentNickname,
+                            genderSymbol: currentGenderSymbol,
+                            timestamp: serverTimestamp() // Use server timestamp for accuracy
+                        });
+                    } else {
+                        // Delete the document when not typing
+                        await deleteDoc(typingDocRef);
+                    }
+                } catch (e) {
+                    console.error("Error setting typing status:", e);
+                }
+            }
+
+            // Debounce function for typing status updates
+            const debounce = (func, delay) => {
+                let timeout;
+                return function(...args) {
+                    const context = this;
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(context, args), delay);
+                };
+            };
+
+            const debouncedSetTypingStatus = debounce(() => setTypingStatus(true), 1000); // Update status every 1 second of active typing
+
+            messageInput.addEventListener('input', () => {
+                adjustTextareaHeight();
+                debouncedSetTypingStatus(); // Signal typing
+            });
+
+            // Listen for typing indicators from others
+            function setupTypingIndicatorListener() {
+                if (!db || !currentRoomMood) return;
+
+                const q = collection(db, `typing_indicators/${currentRoomMood}`);
+                
+                onSnapshot(q, (snapshot) => {
+                    const typers = [];
+                    const now = Date.now();
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        // Only show if it's not our own typing status AND it's recent (e.g., within 5 seconds)
+                        if (doc.id !== userId && data.timestamp && (now - data.timestamp.toMillis() < TYPING_TIMEOUT_MS * 2)) { // Allow a bit longer to account for network lag
+                            typers.push(data.nickname);
+                        }
+                    });
+
+                    if (typers.length > 0) {
+                        typingIndicatorElement.textContent = `${typers.join(', ')} is typing...`;
+                        typingIndicatorElement.classList.add('active');
+                    } else {
+                        typingIndicatorElement.textContent = '';
+                        typingIndicatorElement.classList.remove('active');
+                    }
+                }, (error) => {
+                    console.error("Error listening to typing indicators:", error);
+                });
             }
 
             // --- Post Limit Logic (using localStorage for daily reset) ---
@@ -588,11 +674,14 @@
                     messageInput.placeholder = "Daily limit reached. Go Premium!";
                     messageInput.disabled = true;
                     sendButton.disabled = true;
+                    messageInput.classList.add('opacity-50', 'cursor-not-allowed');
                     sendButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    setTypingStatus(false); // Ensure typing status is cleared if limit is reached
                 } else {
                     messageInput.placeholder = "Share your thoughts...";
                     messageInput.disabled = false;
                     sendButton.disabled = false;
+                    messageInput.classList.remove('opacity-50', 'cursor-not-allowed');
                     sendButton.classList.remove('opacity-50', 'cursor-not-allowed');
                 }
             }
@@ -625,10 +714,10 @@
 
             // --- Auto-adjust textarea height ---
             function adjustTextareaHeight() {
-                    messageInput.style.height = 'auto'; // Reset height
-                    messageInput.style.height = messageInput.scrollHeight + 'px'; // Set to scroll height
-                }
-            messageInput.addEventListener('input', adjustTextareaHeight);
+                messageInput.style.height = 'auto'; // Reset height
+                messageInput.style.height = messageInput.scrollHeight + 'px'; // Set to scroll height
+            }
+            // Event listener for input already exists, no change needed here.
 
             // --- Auto-scroll to bottom, but pause on user scroll up ---
             let isUserScrolling = false;
@@ -636,10 +725,9 @@
 
             chatMessages.addEventListener('scroll', () => {
                 clearTimeout(scrollTimeout);
-                // Check if the user is scrolling up (more than 20px from bottom)
                 isUserScrolling = chatMessages.scrollHeight - chatMessages.clientHeight > chatMessages.scrollTop + 20; 
                 scrollTimeout = setTimeout(() => {
-                    isUserScrolling = false; // Reset after 0.5s of no scroll activity
+                    isUserScrolling = false; 
                 }, 500); 
             });
 
@@ -676,7 +764,6 @@
             premiumButton.addEventListener('click', () => {
                 alert("Redirecting to premium subscription page! (Placeholder)");
                 paymentModal.classList.remove('active');
-                // In a real app, this would redirect to a payment gateway
             });
 
             // --- Theme Switcher Logic ---
