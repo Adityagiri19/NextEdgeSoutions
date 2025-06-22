@@ -152,44 +152,6 @@
             transform: scale(0.95);
         }
 
-        /* Emoji reaction container */
-        .reaction-container {
-            position: absolute;
-            bottom: -1.25rem; /* Position below message bubble */
-            right: 0.5rem; /* Align to the right for received, left for sent */
-            display: flex;
-            gap: 0.25rem;
-            background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 1rem;
-            padding: 0.25rem 0.5rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            opacity: 0;
-            transform: translateY(10px) scale(0.9);
-            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
-            pointer-events: none; /* Allow clicks through when hidden */
-            z-index: 20; /* Above messages */
-        }
-
-        .message-bubble:hover .reaction-container {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-            pointer-events: auto; /* Enable clicks when visible */
-        }
-
-        .reaction-container button {
-            font-size: 1.2rem;
-            padding: 0.25rem;
-            border-radius: 50%;
-            background: none;
-            border: none;
-            cursor: pointer;
-            transition: transform 0.1s ease-in-out;
-        }
-
-        .reaction-container button:hover {
-            transform: scale(1.2);
-        }
-
         /* Floating heart animation on send */
         .floating-heart-send {
             position: absolute;
@@ -353,6 +315,7 @@
                     class="message-input flex-grow"
                     rows="1"
                 ></textarea>
+                <!-- Removed AI Suggest Button -->
                 <button id="send-button" class="send-button w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400">
                     <i class="fas fa-paper-plane"></i>
                 </button>
@@ -365,7 +328,18 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js"; // Added Analytics import
+        // Removed: import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
+
+        // --- GLOBAL DECLARATIONS FOR THEME LOGIC ---
+        const themeNamesOrder = ["Comfort", "Joy", "Sadness"]; // Order for cycling through themes
+        const visualThemes = { // Defines the visual themes and their corresponding CSS classes
+            "Comfort": { class: "theme-Comfort" },
+            "Joy": { class: "theme-Joy" },
+            "Sadness": { class: "theme-Sadness" }
+        };
+        let currentThemeIndex; 
+        let currentThemeName;
+
 
         document.addEventListener('DOMContentLoaded', async () => {
             const roomNameElement = document.getElementById('room-name');
@@ -373,6 +347,7 @@
             const chatMessages = document.getElementById('chat-messages');
             const messageInput = document.getElementById('message-input');
             const sendButton = document.getElementById('send-button');
+            // Removed: const aiSuggestButton = document.getElementById('ai-suggest-button');
             const postLimitDisplay = document.getElementById('post-limit-display');
             
             const dailyReflectionModal = document.getElementById('daily-reflection-modal');
@@ -394,7 +369,7 @@
             let db; // Firestore instance
             let auth; // Auth instance
             let userId; // Current user's anonymous ID
-            let analytics; // Analytics instance
+            // Removed: let analytics; // Analytics instance
 
             // --- Firebase Initialization ---
             // ===========================================================================
@@ -406,8 +381,8 @@
               projectId: "soulchat-app",
               storageBucket: "soulchat-app.firebasestorage.app",
               messagingSenderId: "595441139618",
-              appId: "1:595441139618:web:56eb81bb3d6bde776c3cfb",
-              measurementId: "G-61G3ZDNXJZ"
+              appId: "1:595441139618:web:56eb81bb3d6bde776c3cfb"
+              // Removed: measurementId: "G-61G3ZDNXJZ"
             };
 
             // For local testing and GitHub Pages, we will use the same path segments as defined in the rules.
@@ -418,7 +393,7 @@
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-                analytics = getAnalytics(app); // Initialize Analytics here
+                // Removed: analytics = getAnalytics(app); // Initialize Analytics here
 
                 // Authenticate anonymously
                 if (initialAuthToken) {
@@ -444,6 +419,7 @@
                 chatMessages.innerHTML = `<div class="text-center text-red-500 mt-8">Failed to load chat. Please try again later. (Check console for details).</div>`;
                 messageInput.disabled = true;
                 sendButton.disabled = true;
+                // Removed: aiSuggestButton.disabled = true; // Disable AI button too on error
             }
 
 
@@ -460,13 +436,13 @@
                 "Sadness": { icon: "😔" }
             };
 
-            // --- Themes for Visual Switching ---
-            const visualThemes = { // Defines the visual themes and their corresponding CSS classes
-                "Comfort": { class: "theme-Comfort" },
-                "Joy": { class: "theme-Joy" },
-                "Sadness": { class: "theme-Sadness" }
-            };
-            const themeNamesOrder = ["Comfort", "Joy", "Sadness"]; // Order for cycling through themes
+            // --- Initialize currentThemeIndex and currentThemeName here ---
+            // These assignments depend on currentRoomMood which is parsed from URL
+            currentThemeIndex = themeNamesOrder.indexOf(currentRoomMood); 
+            if (currentThemeIndex === -1) { // If the initial mood from URL is not one of the three, default to Comfort
+                currentThemeIndex = 0; // Comfort
+            }
+            currentThemeName = themeNamesOrder[currentThemeIndex]; // Keep track of the currently active visual theme name
 
             // Set the room name and icon based on the initial mood
             const initialRoomInfo = roomMoods[currentRoomMood];
@@ -474,7 +450,6 @@
             roomIconElement.textContent = initialRoomInfo.icon;
 
             // Apply the initial theme to the body
-            let currentThemeName = currentRoomMood; // Start with the room's mood as the initial visual theme
             document.body.classList.add(visualThemes[currentThemeName].class);
 
             // --- Active Users Placeholder ---
@@ -487,7 +462,6 @@
 
                 if (!userId) {
                     console.error("User not authenticated, cannot send message.");
-                    // Potentially show a modal asking user to refresh or check connection
                     return;
                 }
 
@@ -514,36 +488,36 @@
                     // scrollToBottom() will be handled by the onSnapshot listener for consistency
 
                     // Add floating heart animation (only for the sender's UI)
-                    // We create a temporary invisible element to get the position before the message appears live via onSnapshot
                     const tempInvisibleBubble = document.createElement('div');
                     tempInvisibleBubble.style.cssText = 'position: absolute; visibility: hidden;';
-                    tempInvisibleBubble.classList.add('message-bubble', 'sent'); // Use sent class for positioning
+                    tempInvisibleBubble.classList.add('message-bubble', 'sent');
                     tempInvisibleBubble.innerHTML = `<div class="sender-info">${currentGenderSymbol ? currentGenderSymbol + ' ' : ''}${currentNickname}</div><p>${messageText}</p>`;
-                    chatMessages.appendChild(tempInvisibleBubble); // Temporarily add to DOM to get dimensions
+                    chatMessages.appendChild(tempInvisibleBubble);
 
                     const rect = tempInvisibleBubble.getBoundingClientRect();
                     const floatingHeart = document.createElement('div');
                     floatingHeart.classList.add('floating-heart-send');
-                    floatingHeart.textContent = '�';
+                    floatingHeart.textContent = '💖'; // Corrected heart emoji
                     document.body.appendChild(floatingHeart);
                     
-                    // Position the heart relative to the bottom right of where the sent message *would* be
                     floatingHeart.style.left = `${rect.right - 20}px`; 
                     floatingHeart.style.top = `${rect.top}px`;
 
                     floatingHeart.addEventListener('animationend', () => {
                         floatingHeart.remove();
-                        tempInvisibleBubble.remove(); // Remove the temporary element after animation
+                        tempInvisibleBubble.remove();
                     });
 
 
                 } catch (e) {
                     console.error("Error adding document: ", e);
-                    // Inform user about send failure
-                    // Potentially show a temporary message bubble with "Failed to send"
                 }
             }
 
+            // Removed: --- Gemini API Integration: Generate Empathic Response ---
+            // Removed: async function generateEmpathicResponse() { ... }
+            // Removed: aiSuggestButton.addEventListener('click', generateEmpathicResponse);
+            
             // --- Real-time Chat Setup (Firestore Listener) ---
             function setupRealtimeChat() {
                 // Clear initial example messages. This is important as Firebase will now populate them.
@@ -564,8 +538,6 @@
                                 displayMessage(message, change.doc.id); // Pass doc.id for potential future use (e.g., reactions)
                             }
                         }
-                        // For a full chat app, you'd also handle 'modified' (for reactions/edits)
-                        // and 'removed' (for deleted messages). For now, we only process 'added'.
                     });
                     scrollToBottom(); // Scroll after new messages are added
                 }, (error) => {
@@ -612,12 +584,16 @@
                     messageInput.placeholder = "Daily limit reached. Go Premium!";
                     messageInput.disabled = true;
                     sendButton.disabled = true;
+                    // Removed: aiSuggestButton.disabled = true; // Disable AI button too
                     sendButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    // Removed: aiSuggestButton.classList.add('opacity-50', 'cursor-not-allowed');
                 } else {
                     messageInput.placeholder = "Share your thoughts...";
                     messageInput.disabled = false;
                     sendButton.disabled = false;
+                    // Removed: aiSuggestButton.disabled = false; // Enable AI button
                     sendButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    // Removed: aiSuggestButton.classList.remove('opacity-50', 'cursor-not-allowed');
                 }
             }
 
@@ -704,34 +680,25 @@
             });
 
             // --- Theme Switcher Logic ---
-            const themeNamesOrder = ["Comfort", "Joy", "Sadness"]; // Order for cycling through themes
-            let currentThemeIndex = themeNamesOrder.indexOf(currentRoomMood); 
-            if (currentThemeIndex === -1) { // If the initial mood from URL is not one of the three, default to Comfort
-                currentThemeIndex = 0; // Comfort
+            currentThemeIndex = themeNamesOrder.indexOf(currentRoomMood); 
+            if (currentThemeIndex === -1) { 
+                currentThemeIndex = 0; 
             }
-            let currentThemeName = themeNamesOrder[currentThemeIndex]; // Keep track of the currently active visual theme name
+            currentThemeName = themeNamesOrder[currentThemeIndex]; 
 
             themeSwitcherButton.addEventListener('click', () => {
-                // Remove current theme class
                 document.body.classList.remove(visualThemes[currentThemeName].class);
-
-                // Move to next theme
                 currentThemeIndex = (currentThemeIndex + 1) % themeNamesOrder.length;
-                currentThemeName = themeNamesOrder[currentThemeIndex]; // Update current visual theme
-
-                // Apply new theme class
+                currentThemeName = themeNamesOrder[currentThemeIndex]; 
                 document.body.classList.add(visualThemes[currentThemeName].class);
-                // Important: Room name and icon remain unchanged, as they reflect the ROOM, not the visual theme.
             });
 
 
             // Initial calls
             checkDailyPostLimit();
-            adjustTextareaHeight(); // Adjust for initial placeholder
-            // scrollToBottom() will be called by Firebase listener now
-            showDailyReflectionModal(); // Show modal on first visit of the day
+            adjustTextareaHeight();
+            showDailyReflectionModal(); 
         });
     </script>
 </body>
 </html>
-�
