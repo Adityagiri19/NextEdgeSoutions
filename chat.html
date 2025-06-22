@@ -44,20 +44,29 @@
             --theme-bubble-my: #E6E6FA; /* Lavender */
         }
 
+        /* Essential for full height and consistent mobile layout */
+        html, body {
+            height: 100%; /* Ensure html and body take full height of the viewport */
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent main body scroll, let chat-messages handle it */
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
-            /* Initial background will be set by JS based on currentMood/initial theme */
+            background: var(--theme-primary); /* Initial background, will be set by JS based on theme */
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            /* Removed min-height: 100vh; and added height: 100% for better mobile adaptability */
+            height: 100%; /* Ensure body fills its parent (html) */
             color: var(--theme-text-dark);
             transition: background 0.5s ease-in-out; /* Smooth theme transition */
-            overflow: hidden; /* Hide potential scrollbars from floating elements */
+            /* overflow: hidden; kept at html/body level */
         }
 
         /* Main chat container */
         .chat-container {
-            flex-grow: 1;
+            flex-grow: 1; /* Allows it to take available height */
             display: flex;
             flex-direction: column;
             max-width: 768px; /* Max width for chat readability on large screens */
@@ -66,14 +75,15 @@
             background-color: var(--theme-bg-soft);
             border-radius: 1.5rem;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            overflow: hidden; /* Ensure rounded corners are respected */
+            /* Removed overflow: hidden here, as chat-messages will manage scrolling */
             position: relative;
             z-index: 10;
+            height: 100%; /* Ensure chat-container fills the body's height */
         }
 
         /* Chat messages area */
         .chat-messages {
-            flex-grow: 1;
+            flex-grow: 1; /* Allows it to take all available space */
             padding: 1rem;
             overflow-y: auto; /* Enable scrolling for messages */
             -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
@@ -81,6 +91,7 @@
             flex-direction: column;
             gap: 0.75rem; /* Space between message bubbles */
             scroll-behavior: smooth;
+            min-height: 0; /* Allows this flex item to shrink below its content size if needed */
         }
 
         /* Message bubble base */
@@ -315,7 +326,6 @@
                     class="message-input flex-grow"
                     rows="1"
                 ></textarea>
-                <!-- Removed AI Suggest Button -->
                 <button id="send-button" class="send-button w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400">
                     <i class="fas fa-paper-plane"></i>
                 </button>
@@ -328,7 +338,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
-        // Removed: import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
 
         // --- GLOBAL DECLARATIONS FOR THEME LOGIC ---
         const themeNamesOrder = ["Comfort", "Joy", "Sadness"]; // Order for cycling through themes
@@ -347,7 +357,6 @@
             const chatMessages = document.getElementById('chat-messages');
             const messageInput = document.getElementById('message-input');
             const sendButton = document.getElementById('send-button');
-            // Removed: const aiSuggestButton = document.getElementById('ai-suggest-button');
             const postLimitDisplay = document.getElementById('post-limit-display');
             
             const dailyReflectionModal = document.getElementById('daily-reflection-modal');
@@ -369,7 +378,7 @@
             let db; // Firestore instance
             let auth; // Auth instance
             let userId; // Current user's anonymous ID
-            // Removed: let analytics; // Analytics instance
+            let analytics; // Analytics instance
 
             // --- Firebase Initialization ---
             // ===========================================================================
@@ -381,8 +390,8 @@
               projectId: "soulchat-app",
               storageBucket: "soulchat-app.firebasestorage.app",
               messagingSenderId: "595441139618",
-              appId: "1:595441139618:web:56eb81bb3d6bde776c3cfb"
-              // Removed: measurementId: "G-61G3ZDNXJZ"
+              appId: "1:595441139618:web:56eb81bb3d6bde776c3cfb",
+              measurementId: "G-61G3ZDNXJZ"
             };
 
             // For local testing and GitHub Pages, we will use the same path segments as defined in the rules.
@@ -393,7 +402,7 @@
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-                // Removed: analytics = getAnalytics(app); // Initialize Analytics here
+                analytics = getAnalytics(app); // Initialize Analytics here
 
                 // Authenticate anonymously
                 if (initialAuthToken) {
@@ -419,7 +428,6 @@
                 chatMessages.innerHTML = `<div class="text-center text-red-500 mt-8">Failed to load chat. Please try again later. (Check console for details).</div>`;
                 messageInput.disabled = true;
                 sendButton.disabled = true;
-                // Removed: aiSuggestButton.disabled = true; // Disable AI button too on error
             }
 
 
@@ -514,10 +522,6 @@
                 }
             }
 
-            // Removed: --- Gemini API Integration: Generate Empathic Response ---
-            // Removed: async function generateEmpathicResponse() { ... }
-            // Removed: aiSuggestButton.addEventListener('click', generateEmpathicResponse);
-            
             // --- Real-time Chat Setup (Firestore Listener) ---
             function setupRealtimeChat() {
                 // Clear initial example messages. This is important as Firebase will now populate them.
@@ -584,16 +588,12 @@
                     messageInput.placeholder = "Daily limit reached. Go Premium!";
                     messageInput.disabled = true;
                     sendButton.disabled = true;
-                    // Removed: aiSuggestButton.disabled = true; // Disable AI button too
                     sendButton.classList.add('opacity-50', 'cursor-not-allowed');
-                    // Removed: aiSuggestButton.classList.add('opacity-50', 'cursor-not-allowed');
                 } else {
                     messageInput.placeholder = "Share your thoughts...";
                     messageInput.disabled = false;
                     sendButton.disabled = false;
-                    // Removed: aiSuggestButton.disabled = false; // Enable AI button
                     sendButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                    // Removed: aiSuggestButton.classList.remove('opacity-50', 'cursor-not-allowed');
                 }
             }
 
