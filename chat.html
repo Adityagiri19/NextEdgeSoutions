@@ -498,7 +498,8 @@
                         nickname: currentNickname,
                         genderSymbol: currentGenderSymbol,
                         text: messageText,
-                        timestamp: serverTimestamp() // Firestore's server timestamp
+                        timestamp: serverTimestamp(), // Firestore's server timestamp
+                        localId: localMessageId // Store localId in Firestore for reconciliation
                     });
 
                 } catch (e) {
@@ -520,31 +521,22 @@
                         const docId = change.doc.id;
 
                         if (change.type === "added") {
-                            // Check if this is the current user's message and if an optimistic version exists
-                            // We compare userId and message text for a simple match
-                            if (message.userId === userId) {
-                                // Find any optimistic message by its localId
-                                // Note: We sent localId with the message, so we can try to find it
-                                const optimisticMessageElement = document.querySelector(`.message-bubble[data-local-id="${message.localId}"]`);
-                                
-                                if (optimisticMessageElement) {
-                                    // If found, update its attributes to be the real message
-                                    optimisticMessageElement.removeAttribute('data-local-id');
-                                    optimisticMessageElement.setAttribute('data-doc-id', docId);
-                                    // No need to re-append, just update attributes.
-                                    // This assumes the *content* hasn't changed.
-                                    console.log("Optimistic message confirmed and updated:", docId);
-                                    // Skip further display logic for this message, as it's already in DOM and updated
-                                    return;
+                            // If this message was sent by the current user AND has a localId
+                            if (message.userId === userId && message.localId) {
+                                // Find the optimistically displayed message by its localId
+                                const optimisticElement = document.querySelector(`.message-bubble[data-local-id="${message.localId}"]`);
+                                if (optimisticElement) {
+                                    // If found, remove the optimistic element
+                                    optimisticElement.remove();
+                                    console.log("Removed optimistic message, now displaying real:", docId);
                                 }
                             }
-                            // If not an optimistic message or no matching optimistic message found, display it
-                            console.log("New message from Firestore:", message);
+                            // Always display the message coming from Firestore (real or confirmed)
+                            console.log("Displaying message from Firestore:", docId, message);
                             displayMessage(message, docId); 
                         } else if (change.type === "modified") {
                             // Handle message modifications (e.g., reactions, edits)
                             console.log("Modified message:", message);
-                            // You would find the message bubble by docId and update its content
                             const existingMessageElement = document.querySelector(`.message-bubble[data-doc-id="${docId}"]`);
                             if (existingMessageElement) {
                                 existingMessageElement.querySelector('p').textContent = message.text; // Simple update
@@ -567,14 +559,19 @@
 
             // --- Display Message Function (Modified for consistency and optimistic flag) ---
             function displayMessage(message, id, isOptimistic = false) {
-                // 'id' here can be a localId (for optimistic) or a Firestore docId (for real)
+                // Before displaying, check if a real message with this docId already exists
+                if (document.querySelector(`.message-bubble[data-doc-id="${id}"]`) && !isOptimistic) {
+                    console.log("Skipping display of duplicate real message:", id);
+                    return;
+                }
+
                 const messageBubble = document.createElement('div');
                 messageBubble.classList.add('message-bubble', 'opacity-0');
 
                 if (isOptimistic) {
-                    messageBubble.setAttribute('data-local-id', id);
+                    messageBubble.setAttribute('data-local-id', id); // For optimistic messages
                 } else {
-                    messageBubble.setAttribute('data-doc-id', id);
+                    messageBubble.setAttribute('data-doc-id', id); // For real messages from Firestore
                 }
 
                 // Determine if the message was sent by the current user
@@ -591,7 +588,7 @@
                 messageBubble.innerHTML = `
                     <div class="sender-info">${senderInfo}</div>
                     <p>${message.text}</p>
-                `; // Removed reaction-container
+                `; // Reaction container removed
 
                 chatMessages.appendChild(messageBubble);
                 setTimeout(() => messageBubble.classList.remove('opacity-0'), 10);
@@ -629,17 +626,19 @@
                 };
             };
 
-            const debouncedSetTypingStatus = debounce(() => setTypingStatus(true), 1000); // Update status every 1 second of active typing
+            // This debounce is for *clearing* the typing status after a pause
+            const debouncedClearTypingStatus = debounce(() => setTypingStatus(false), TYPING_TIMEOUT_MS); 
 
             messageInput.addEventListener('input', () => {
                 adjustTextareaHeight();
                 setTypingStatus(true); // Immediately set typing status on input
-                debouncedSetTypingStatus(); // Debounce the clear typing status
+                debouncedClearTypingStatus(); // Reset the timer to clear typing status
             });
             
             // Listen for blur event to clear typing status if user leaves input field
             messageInput.addEventListener('blur', () => {
                 setTypingStatus(false);
+                clearTimeout(debouncedClearTypingStatus); // Clear any pending debounced calls
             });
 
             // Listen for typing indicators from others
@@ -653,8 +652,9 @@
                     const now = Date.now();
                     snapshot.forEach(doc => {
                         const data = doc.data();
-                        // Only show if it's not our own typing status AND it's recent (e.g., within 5 seconds)
-                        if (doc.id !== userId && data.timestamp && (now - data.timestamp.toMillis() < TYPING_TIMEOUT_MS * 2)) { 
+                        // Only show if it's not our own typing status AND it's recent (e.g., within TYPING_TIMEOUT_MS * 1.5)
+                        // Using a slightly longer window than the debounce for robustness
+                        if (doc.id !== userId && data.timestamp && (now - data.timestamp.toMillis() < TYPING_TIMEOUT_MS * 1.5)) { 
                             typers.push(data.nickname);
                         }
                     });
