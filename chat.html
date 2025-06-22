@@ -147,7 +147,7 @@
             height: auto; /* Allow auto-resizing based on content */
             min-height: 2.5rem; /* Minimum height */
             max-height: 8rem; /* Max height before scrolling */
-            overflow-y: hidden; /* <--- CHANGED: Hides vertical scrollbar and arrows */
+            overflow-y: hidden; /* Hides vertical scrollbar and arrows */
         }
 
         .send-button {
@@ -336,7 +336,7 @@
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, doc, deleteDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
 
         // --- GLOBAL DECLARATIONS FOR THEME LOGIC ---
@@ -352,6 +352,7 @@
         // --- GLOBAL DECLARATIONS for Typing Indicator ---
         let typingTimeout; // To manage the debounce for typing status
         const TYPING_TIMEOUT_MS = 3000; // 3 seconds after last keypress to clear typing status
+        const MESSAGE_LIFESPAN_HOURS = 6; // Messages older than this will be cleaned
 
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -415,6 +416,9 @@
                         console.log("Firebase Authenticated! User ID:", userId);
                         setupRealtimeChat(); // Setup chat listener after auth
                         setupTypingIndicatorListener(); // Setup typing listener after auth
+                        // Start periodic message cleanup
+                        cleanOldMessages(); 
+                        setInterval(cleanOldMessages, 30 * 60 * 1000); // Run every 30 minutes
                     } else {
                         console.warn("No user signed in. Real-time chat features may be limited.");
                     }
@@ -670,6 +674,42 @@
                     console.error("Error listening to typing indicators:", error);
                 });
             }
+
+            // --- Message Cleanup Logic ---
+            async function cleanOldMessages() {
+                if (!db || !currentRoomMood) {
+                    console.warn("Firestore not initialized or room mood not set for cleanup.");
+                    return;
+                }
+
+                const sixHoursAgo = new Date(Date.now() - MESSAGE_LIFESPAN_HOURS * 60 * 60 * 1000);
+                console.log(`Attempting to clean messages older than: ${sixHoursAgo.toLocaleString()}`);
+
+                try {
+                    const messagesRef = collection(db, `chat_rooms/${currentRoomMood}/messages`);
+                    const q = query(messagesRef, where("timestamp", "<", sixHoursAgo));
+                    
+                    const querySnapshot = await getDocs(q);
+                    
+                    if (querySnapshot.empty) {
+                        console.log("No old messages to clean up.");
+                        return;
+                    }
+
+                    const deletePromises = [];
+                    querySnapshot.forEach((docToDelete) => {
+                        console.log(`Deleting message: ${docToDelete.id}`);
+                        deletePromises.push(deleteDoc(doc(db, `chat_rooms/${currentRoomMood}/messages`, docToDelete.id)));
+                    });
+
+                    await Promise.all(deletePromises);
+                    console.log(`Cleaned up ${querySnapshot.size} old messages.`);
+
+                } catch (error) {
+                    console.error("Error during message cleanup:", error);
+                }
+            }
+
 
             // --- Post Limit Logic (using localStorage for daily reset) ---
             function updatePostLimitDisplay() {
