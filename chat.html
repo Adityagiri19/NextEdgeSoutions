@@ -3,12 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SoulChat - Your Safe Space</title>
-    <!-- Tailwind CSS CDN -->
+    <title>SoulChat - Private Chat</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts - Poppins -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* Custom CSS variables for pastel themes and dynamic theming */
@@ -20,178 +17,154 @@
             --theme-text-light: #fff;
             --theme-bg-soft: #f7f7f7;
             --theme-bubble-other: #e2e8f0; /* bg-slate-200 */
-            --theme-bubble-my: #d1fae5; /* bg-emerald-100 */
-            --theme-input-bg: #fff;
-        }
-
-        /* Mood-specific themes (now referred to as visual themes) */
-        body.theme-Comfort {
-            --theme-primary: #E6E6FA; /* Lavender */
-            --theme-secondary: #D8BFD8; /* Thistle */
-            --theme-accent: #DA70D6; /* Orchid */
-            --theme-bubble-my: #F3E5F5; /* light purple */
-        }
-        body.theme-Joy {
-            --theme-primary: #FFD700; /* Gold */
-            --theme-secondary: #FFFACD; /* Lemon Chiffon */
-            --theme-accent: #FFC107; /* Amber */
-            --theme-bubble-my: #FFF8DC; /* Cornsilk */
-        }
-        body.theme-Sadness {
-            --theme-primary: #6A5ACD; /* Slate Blue */
-            --theme-secondary: #B0C4DE; /* Light Steel Blue */
-            --theme-accent: #778899; /* Light Slate Gray */
-            --theme-bubble-my: #E6E6FA; /* Lavender */
-        }
-
-        /* Essential for full height and consistent mobile layout */
-        html, body {
-            height: 100%; /* Ensure html and body take full height of the viewport */
-            margin: 0;
-            padding: 0;
-            overflow: hidden; /* Prevent main body scroll, let chat-messages handle it */
+            --theme-bubble-my: #BFDBFE; /* bg-blue-200 */ /* Adjusted for my messages */
         }
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: var(--theme-primary); /* Initial background, will be set by JS based on theme */
+            background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
             display: flex;
             flex-direction: column;
-            height: 100%; /* Ensure body fills its parent (html) */
+            min-height: 100vh;
             color: var(--theme-text-dark);
-            transition: background 0.5s ease-in-out; /* Smooth theme transition */
+            transition: background 0.5s ease-in-out;
         }
 
-        /* Main chat container */
         .chat-container {
-            flex-grow: 1; /* Allows it to take available height */
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
-            max-width: 768px; /* Max width for chat readability on large screens */
+            max-width: 800px;
             width: 100%;
-            margin: 0 auto; /* Center the chat container */
+            margin: 0 auto;
             background-color: var(--theme-bg-soft);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
             border-radius: 1.5rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            position: relative;
-            z-index: 10;
-            height: 100%; /* Ensure chat-container fills the body's height */
+            overflow: hidden;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
         }
 
-        /* Chat messages area */
+        .chat-header {
+            background: linear-gradient(90deg, var(--theme-accent), var(--theme-primary));
+            padding: 1.5rem 1rem;
+            color: var(--theme-text-light);
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         .chat-messages {
-            flex-grow: 1; /* Allows it to take all available space */
+            flex-grow: 1;
             padding: 1rem;
-            overflow-y: auto; /* Enable scrolling for messages */
-            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 0.75rem; /* Space between message bubbles */
+            gap: 0.75rem;
             scroll-behavior: smooth;
-            min-height: 0; /* Allows this flex item to shrink below its content size if needed */
         }
 
-        /* Message bubble base */
         .message-bubble {
             max-width: 80%;
-            padding: 0.75rem 1.25rem;
-            border-radius: 1.5rem;
+            padding: 0.75rem 1rem;
+            border-radius: 1.25rem;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
             line-height: 1.4;
-            position: relative;
-            transition: transform 0.2s ease-out, opacity 0.2s ease-out; /* Fade-in animation */
-            animation: fadeIn 0.3s ease-out;
+            word-wrap: break-word;
         }
 
-        /* Fade-in animation for messages */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .message-bubble.sent {
+        .message-bubble.my-message {
             background-color: var(--theme-bubble-my);
-            align-self: flex-end; /* Align to right */
-            border-bottom-right-radius: 0.5rem; /* Pointy end */
+            align-self: flex-end;
         }
 
-        .message-bubble.received {
+        .message-bubble.other-message {
             background-color: var(--theme-bubble-other);
-            align-self: flex-start; /* Align to left */
-            border-bottom-left-radius: 0.5rem; /* Pointy end */
+            align-self: flex-start;
         }
 
-        .message-bubble .sender-info {
+        .message-sender {
             font-size: 0.75rem;
             color: var(--theme-text-dark);
             opacity: 0.7;
             margin-bottom: 0.25rem;
+            font-weight: 500;
         }
 
-        /* Message input area */
-        .message-input-area {
-            padding: 1rem;
-            background-color: var(--theme-input-bg);
-            border-top: 1px solid rgba(0, 0, 0, 0.05);
-            border-bottom-left-radius: 1.5rem; /* Match chat container radius */
-            border-bottom-right-radius: 1.5rem; /* Match chat container radius */
-        }
-
-        .message-input {
-            border-radius: 2rem;
-            padding: 0.75rem 1.25rem;
-            background-color: var(--theme-bg-soft);
-            border: 1px solid rgba(0, 0, 0, 0.1);
+        .message-timestamp {
+            font-size: 0.65rem;
             color: var(--theme-text-dark);
-            resize: none; /* Disable textarea resize */
-            height: auto; /* Allow auto-resizing based on content */
-            min-height: 2.5rem; /* Minimum height */
-            max-height: 8rem; /* Max height before scrolling */
-            overflow-y: hidden; /* Hides vertical scrollbar and arrows */
+            opacity: 0.5;
+            margin-top: 0.25rem;
+            text-align: right;
+        }
+
+        .chat-input-area {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #e0e0e0;
+            background-color: #fff;
+        }
+
+        textarea {
+            flex-grow: 1;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 1.5rem;
+            margin-right: 0.75rem;
+            resize: none;
+            overflow-y: hidden; /* Hide scrollbar */
+            max-height: 120px; /* Limit height */
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--theme-primary);
+            box-shadow: 0 0 0 2px rgba(135, 206, 235, 0.4);
         }
 
         .send-button {
             background-color: var(--theme-primary);
-            transition: background-color 0.3s ease-in-out, transform 0.1s ease-in-out;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            color: var(--theme-text-light);
+            padding: 0.75rem 1rem;
+            border-radius: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease-in-out;
+            cursor: pointer;
         }
 
-        .send-button:active {
-            transform: scale(0.95);
+        .send-button:hover {
+            background-color: #6fb0d2; /* Slightly darker primary */
         }
 
-        /* Floating heart animation on send */
-        .floating-heart-send {
-            position: absolute;
-            font-size: 2rem;
-            color: var(--theme-accent);
-            opacity: 0;
-            animation: float-send 1s ease-out forwards;
-            pointer-events: none;
-            z-index: 50;
+        .typing-indicator {
+            font-size: 0.75rem;
+            color: var(--theme-text-dark);
+            opacity: 0.6;
+            margin-top: 0.5rem;
+            text-align: center;
         }
 
-        @keyframes float-send {
-            0% { transform: translateY(0) translateX(0) scale(0.5); opacity: 0.8; }
-            50% { transform: translateY(-50px) translateX(10px) scale(1); opacity: 0.6; }
-            100% { transform: translateY(-100px) translateX(20px) scale(1.5); opacity: 0; }
-        }
-
-        /* Daily reflection modal & Payment modal */
+        /* Modal Styles */
         .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.5);
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            z-index: 1000;
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
 
         .modal-overlay.active {
@@ -202,634 +175,504 @@
         .modal-content {
             background-color: white;
             padding: 2rem;
-            border-radius: 1.5rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-radius: 1rem;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             max-width: 90%;
             width: 400px;
-            text-align: center;
             transform: translateY(-20px);
-            transition: transform 0.3s ease-out;
+            transition: transform 0.3s ease;
         }
+
         .modal-overlay.active .modal-content {
             transform: translateY(0);
         }
-        
-        /* Ensure top bar sticks to top and chat messages fill remaining space */
-        .top-bar {
-            position: sticky;
-            top: 0;
-            z-index: 30; /* Ensure it's above chat bubbles when scrolling */
+
+        .modal-content h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--theme-primary);
         }
 
-        /* Typing indicator styling */
-        .typing-indicator {
-            font-style: italic;
-            color: #6b7280; /* text-gray-500 */
-            padding-left: 0.5rem;
-            height: 1.5rem; /* Reserve space to prevent layout shift */
-            overflow: hidden;
-            transition: opacity 0.2s ease-in-out;
-            opacity: 0; /* Hidden by default */
-        }
-        .typing-indicator.active {
-            opacity: 1;
+        .modal-content p {
+            margin-bottom: 1.5rem;
+            color: var(--theme-text-dark);
         }
 
-        /* Mobile specific adjustments */
-        @media (max-width: 767px) {
-            .chat-container {
-                border-radius: 0; /* Full width on mobile */
-                box-shadow: none;
-            }
-            body {
-                padding: 0; /* Remove body padding on mobile */
-            }
-            .top-bar {
-                padding: 1rem 1.5rem;
-            }
+        .modal-buttons button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
         }
 
+        .modal-buttons button.primary {
+            background-color: var(--theme-primary);
+            color: white;
+            margin-right: 0.75rem;
+        }
+
+        .modal-buttons button.primary:hover {
+            background-color: #6fb0d2;
+        }
+
+        .modal-buttons button.secondary {
+            background-color: #e2e8f0;
+            color: var(--theme-text-dark);
+        }
+
+        .modal-buttons button.secondary:hover {
+            background-color: #cbd5e1;
+        }
+
+        /* Theme Specific Overrides */
+        body.theme-gentle-sky {
+            --theme-primary: #87CEEB; /* Sky Blue */
+            --theme-secondary: #B0E0E6; /* Mint */
+            --theme-accent: #FFDAB9; /* Peach */
+            --theme-bubble-my: #BFDBFE; /* Light Blue */
+        }
+        body.theme-blush-rose {
+            --theme-primary: #FFC0CB; /* Pink */
+            --theme-secondary: #F0B0B0; /* Light Coral */
+            --theme-accent: #FFD700; /* Gold */
+            --theme-bubble-my: #FDDDE6; /* Lighter Pink */
+        }
+        body.theme-sage-green {
+            --theme-primary: #A2D9CE; /* Sage Green */
+            --theme-secondary: #8ECDC3; /* Deeper Sage */
+            --theme-accent: #FFECB3; /* Light Yellow */
+            --theme-bubble-my: #D1E7DD; /* Even Lighter Sage */
+        }
+        body.theme-lavender-dream {
+            --theme-primary: #9370DB; /* Medium Purple */
+            --theme-secondary: #B19CD9; /* Light Purple */
+            --theme-accent: #FFC0CB; /* Pink */
+            --theme-bubble-my: #E6E6FA; /* Lavender */
+        }
+        body.theme-sunrise-bliss {
+            --theme-primary: #FFD700; /* Gold */
+            --theme-secondary: #FFA07A; /* Light Salmon */
+            --theme-accent: #FFC0CB; /* Pink */
+            --theme-bubble-my: #FFECB3; /* Light Yellow */
+        }
     </style>
 </head>
-<body>
-
-    <!-- Daily Reflection Modal -->
-    <div id="daily-reflection-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 class="text-2xl font-bold mb-4 text-gray-800">Hello Soul,</h3>
-            <p class="text-lg text-gray-700 mb-6">What are you feeling today? Share your heart.</p>
-            <button id="close-reflection-modal-button" class="py-2 px-6 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors">Okay, I'll Share</button>
-        </div>
-    </div>
-
-    <!-- Payment Prompt Modal -->
-    <div id="payment-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 class="text-2xl font-bold mb-4 text-gray-800">Daily Limit Reached!</h3>
-            <p class="text-lg text-gray-700 mb-6">You've sent 30 messages today. To continue sharing and connecting, please consider subscribing to SoulChat Premium.</p>
-            <div class="flex flex-col sm:flex-row justify-center gap-3">
-                <button id="premium-button" class="py-2 px-6 bg-purple-500 text-white rounded-full hover:bg-purple-600 transition-colors shadow-md">Go Premium!</button>
-                <button id="close-payment-modal-button" class="py-2 px-6 bg-gray-300 text-gray-800 rounded-full hover:bg-gray-400 transition-colors shadow-md">Maybe Later</button>
-            </div>
-        </div>
-    </div>
+<body class="theme-gentle-sky">
 
     <div class="chat-container">
-        <!-- Top Bar -->
-        <div class="top-bar bg-white p-4 rounded-t-xl shadow-sm flex items-center justify-between z-10">
-            <div class="flex items-center gap-2">
-                <span id="room-icon" class="text-3xl"></span> <!-- Dynamic mood icon -->
-                <h2 id="room-name" class="text-xl font-semibold text-gray-800"></h2>
-            </div>
-            <div class="flex items-center gap-4">
-                <span class="text-sm text-gray-500 hidden sm:block"><span id="active-users">0</span> people here</span>
-                <button id="theme-switcher-button" class="p-2 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 transition-colors" title="Switch Theme">
-                    <i class="fas fa-palette"></i>
-                </button>
-                <a href="index.html" class="text-gray-600 hover:text-gray-800 transition-colors" title="Go Home">
-                    <i class="fas fa-home text-xl"></i>
-                </a>
-            </div>
+        <div class="chat-header">
+            <button id="back-button" class="text-white text-xl p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-all">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <h2 id="chat-title" class="text-2xl font-bold">Private Chat</h2>
+            <button id="theme-switcher-button" class="text-white text-xl p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-all">
+                <i class="fas fa-paint-brush"></i>
+            </button>
         </div>
 
-        <!-- Chat Messages Area -->
-        <div id="chat-messages" class="chat-messages">
-            <!-- Initial example messages (these will be replaced by live data once Firebase connects) -->
-            <div class="message-bubble received">
-                <div class="sender-info">🫂 GentleSoul42</div>
-                Hello everyone, feeling a bit overwhelmed today. Anyone else?
+        <div id="messages-container" class="chat-messages">
             </div>
-            <div class="message-bubble sent">
-                <div class="sender-info">♀️ WiseRiver99</div>
-                <p>You're not alone. It's okay to feel that way. Sending you warmth!</p>
-            </div>
-             <div class="message-bubble received">
-                <div class="sender-info">♂️ BraveCloud10</div>
-                <p>Same here. This space really helps.</p>
-            </div>
+
+        <div id="typing-indicator" class="typing-indicator hidden">
+            Someone is typing...
         </div>
 
-        <!-- Typing Indicator -->
-        <div id="typing-indicator" class="typing-indicator pl-4 text-sm text-gray-500 italic"></div>
+        <div class="chat-input-area">
+            <textarea
+                id="message-input"
+                class="w-full p-3 border border-gray-300 rounded-full bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-blue"
+                placeholder="Type your message..."
+                rows="1"
+            ></textarea>
+            <button id="send-button" class="send-button">
+                <i class="fas fa-paper-plane text-lg"></i>
+            </button>
+        </div>
+    </div>
 
-        <!-- Message Input Area -->
-        <div class="message-input-area">
-            <div class="flex items-center gap-3 mb-2">
-                <span id="post-limit-display" class="text-sm text-gray-600 flex-shrink-0">Posts left today: 30</span>
-                <div class="flex-grow border-b border-gray-200"></div> <!-- Separator -->
+    <div id="daily-reflection-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Daily Reflection</h3>
+            <p>Take a moment to reflect on your day before continuing.</p>
+            <div class="modal-buttons">
+                <button id="close-reflection-modal" class="primary">Okay</button>
             </div>
-            <div class="flex gap-2">
-                <textarea
-                    id="message-input"
-                    placeholder="Share your thoughts..."
-                    class="message-input flex-grow"
-                    rows="1"
-                ></textarea>
-                <button id="send-button" class="send-button w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
+        </div>
+    </div>
+
+    <div id="payment-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Daily Limit Reached</h3>
+            <p>You've reached your daily message limit. Upgrade to premium for unlimited private messages!</p>
+            <div class="modal-buttons">
+                <button id="premium-button" class="primary">Go Premium</button>
+                <button id="close-payment-modal" class="secondary">Later</button>
             </div>
         </div>
     </div>
 
     <script type="module">
-        // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, doc, deleteDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+        // If you're using Analytics as per your config:
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
 
-        // --- GLOBAL DECLARATIONS FOR THEME LOGIC ---
-        const themeNamesOrder = ["Comfort", "Joy", "Sadness"]; // Order for cycling through themes
-        const visualThemes = { // Defines the visual themes and their corresponding CSS classes
-            "Comfort": { class: "theme-Comfort" },
-            "Joy": { class: "theme-Joy" },
-            "Sadness": { class: "theme-Sadness" }
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDWwgK8_f8be_538Nl4G4RTZ9mrpTQaCXg",
+            authDomain: "privatechat2015.firebaseapp.com",
+            projectId: "privatechat2015",
+            storageBucket: "privatechat2015.firebasestorage.app",
+            messagingSenderId: "1067656879486",
+            appId: "1:1067656879486:web:a65799372ed5badc80a72f",
+            measurementId: "G-7XH414JB93"
         };
-        let currentThemeIndex; 
-        let currentThemeName;
 
-        // --- GLOBAL DECLARATIONS for Typing Indicator ---
-        let typingTimeout; // To manage the debounce for typing status
-        const TYPING_TIMEOUT_MS = 3000; // 3 seconds after last keypress to clear typing status
-        const MESSAGE_LIFESPAN_HOURS = 6; // Messages older than this will be cleaned
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        // Initialize Analytics if needed, as per your config
+        const analytics = getAnalytics(app);
 
+        // DOM Elements
+        const messagesContainer = document.getElementById('messages-container');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const chatTitle = document.getElementById('chat-title');
+        const backButton = document.getElementById('back-button');
+        const themeSwitcherButton = document.getElementById('theme-switcher-button');
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            const roomNameElement = document.getElementById('room-name');
-            const roomIconElement = document.getElementById('room-icon');
-            const chatMessages = document.getElementById('chat-messages');
-            const messageInput = document.getElementById('message-input');
-            const sendButton = document.getElementById('send-button');
-            const postLimitDisplay = document.getElementById('post-limit-display');
-            const typingIndicatorElement = document.getElementById('typing-indicator'); // New: Typing Indicator element
-            
-            const dailyReflectionModal = document.getElementById('daily-reflection-modal');
-            const closeReflectionModalButton = document.getElementById('close-reflection-modal-button');
-            
-            const paymentModal = document.getElementById('payment-modal');
-            const premiumButton = document.getElementById('premium-button');
-            const closePaymentModalButton = document.getElementById('close-payment-modal-button');
+        // Modals
+        const dailyReflectionModal = document.getElementById('daily-reflection-modal');
+        const closeReflectionModalButton = document.getElementById('close-reflection-modal');
+        const paymentModal = document.getElementById('payment-modal');
+        const closePaymentModalButton = document.getElementById('close-payment-modal');
+        const premiumButton = document.getElementById('premium-button');
 
-            const themeSwitcherButton = document.getElementById('theme-switcher-button');
-            const activeUsersElement = document.getElementById('active-users');
+        // Global variables for chat parameters
+        let myUserId = null;
+        let targetUserId = null;
+        let privateChatId = null;
+        let myEmail = null; // To display my own email as sender
 
-            let currentNickname = '';
-            let currentRoomMood = ''; // This will store the *actual* room mood (e.g., "Comfort")
-            let currentGenderSymbol = '';
-            let messagesSentToday = 0;
-            const MAX_POSTS_PER_DAY = 100;
+        // Daily message limit (for demo purposes, keep it here)
+        const MESSAGE_LIMIT = 5; 
+        let userMessageCount = 0;
+        let lastPostDate = null;
+        let isPremiumUser = false; // Placeholder for premium status
 
-            let db; // Firestore instance
-            let auth; // Auth instance
-            let userId; // Current user's anonymous ID
-            let analytics; // Analytics instance
+        // Theme management (can be simplified/removed for private chat if not needed)
+        const visualThemes = {
+            'gentle-sky': { class: 'theme-gentle-sky', primary: '#87CEEB' },
+            'blush-rose': { class: 'theme-blush-rose', primary: '#FFC0CB' },
+            'sage-green': { class: 'theme-sage-green', primary: '#A2D9CE' },
+            'lavender-dream': { class: 'theme-lavender-dream', primary: '#9370DB' },
+            'sunrise-bliss': { class: 'theme-sunrise-bliss', primary: '#FFD700' }
+        };
+        const themeNamesOrder = Object.keys(visualThemes);
+        let currentThemeIndex = 0;
+        let currentThemeName = themeNamesOrder[currentThemeIndex];
 
-            // --- Firebase Initialization ---
-            const firebaseConfig = {
-              apiKey: "AIzaSyAIerQSDRGPsULxT-24e1kJnPN3bOD5lFo",
-              authDomain: "soulchat-app.firebaseapp.com",
-              projectId: "soulchat-app",
-              storageBucket: "soulchat-app.firebasestorage.app",
-              messagingSenderId: "595441139618",
-              appId: "1:595441139618:web:56eb81bb3d6bde776c3cfb",
-              measurementId: "G-61G3ZDNXJZ"
-            };
+        // --- Functions ---
 
-            const initialAuthToken = null;
+        // Adjust textarea height dynamically
+        function adjustTextareaHeight() {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = (messageInput.scrollHeight) + 'px';
+        }
+
+        // Display message in UI
+        function displayMessage(data, isMyMessage) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message-bubble', isMyMessage ? 'my-message' : 'other-message', 'flex', 'flex-col', 'gap-1');
+
+            const senderName = document.createElement('span');
+            senderName.classList.add('message-sender');
+            senderName.textContent = isMyMessage ? 'You' : (data.senderEmail || 'Unknown'); // Display email if available
+
+            const messageContent = document.createElement('span');
+            messageContent.textContent = data.text;
+
+            const timestamp = document.createElement('span');
+            timestamp.classList.add('message-timestamp');
+            if (data.timestamp) {
+                const date = data.timestamp.toDate();
+                timestamp.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+
+            messageElement.appendChild(senderName);
+            messageElement.appendChild(messageContent);
+            messageElement.appendChild(timestamp);
+            messagesContainer.appendChild(messageElement);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Send Message
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (text === '') return;
+
+            if (!isPremiumUser && userMessageCount >= MESSAGE_LIMIT && !isSameDay(lastPostDate, new Date())) {
+                showPaymentModal();
+                return;
+            }
 
             try {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                analytics = getAnalytics(app); // Initialize Analytics here
-
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
+                // Ensure privateChatId is available
+                if (!privateChatId) {
+                    console.error("Private chat ID is not set. Cannot send message.");
+                    return;
                 }
 
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        console.log("Firebase Authenticated! User ID:", userId);
-                        setupRealtimeChat(); // Setup chat listener after auth
-                        setupTypingIndicatorListener(); // Setup typing listener after auth
-                        // Start periodic message cleanup
-                        cleanOldMessages(); 
-                        setInterval(cleanOldMessages, 30 * 60 * 1000); // Run every 30 minutes
-                    } else {
-                        console.warn("No user signed in. Real-time chat features may be limited.");
-                    }
+                await addDoc(collection(db, `private_chats/${privateChatId}/messages`), {
+                    senderId: myUserId,
+                    senderEmail: myEmail, // Store sender email for display
+                    text: text,
+                    timestamp: serverTimestamp(),
+                    // Add other metadata if needed, e.g., read status
                 });
-
-            } catch (error) {
-                console.error("Error initializing Firebase or authenticating:", error);
-                chatMessages.innerHTML = `<div class="text-center text-red-500 mt-8">Failed to load chat. Please try again later. (Check console for details).</div>`;
-                messageInput.disabled = true;
-                sendButton.disabled = true;
-            }
-
-
-            // --- URL Parameter Parsing ---
-            const urlParams = new URLSearchParams(window.location.search);
-            currentNickname = urlParams.get('nickname') || 'AnonymousSoul';
-            currentRoomMood = urlParams.get('mood') || 'Comfort';
-            currentGenderSymbol = urlParams.get('genderSymbol') || '';
-
-            // --- Moods for Room (Fixed once entered) ---
-            const roomMoods = {
-                "Comfort": { icon: "🫂" },
-                "Joy": { icon: "😊" },
-                "Sadness": { icon: "😔" }
-            };
-
-            currentThemeIndex = themeNamesOrder.indexOf(currentRoomMood); 
-            if (currentThemeIndex === -1) { 
-                currentThemeIndex = 0; 
-            }
-            currentThemeName = themeNamesOrder[currentThemeIndex]; 
-
-            const initialRoomInfo = roomMoods[currentRoomMood];
-            roomNameElement.textContent = currentRoomMood + " Room";
-            roomIconElement.textContent = initialRoomInfo.icon;
-
-            document.body.classList.add(visualThemes[currentThemeName].class);
-
-            activeUsersElement.textContent = '...'; 
-
-            // --- Message Sending Functionality ---
-            async function sendMessage() {
-                const messageText = messageInput.value.trim();
-                if (messageText === '') return;
-
-                if (!userId) {
-                    console.error("User not authenticated, cannot send message.");
-                    return;
-                }
-
-                if (messagesSentToday >= MAX_POSTS_PER_DAY) {
-                    showPaymentModal();
-                    return;
-                }
-
-                try {
-                    // Generate a unique local ID for optimistic display
-                    const localMessageId = 'local-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
-
-                    // Optimistically display message first for instant feedback
-                    displayMessage({
-                        userId: userId,
-                        nickname: currentNickname,
-                        genderSymbol: currentGenderSymbol,
-                        text: messageText,
-                        timestamp: new Date(), // Use current client time for optimistic display
-                        localId: localMessageId // Pass localId for reconciliation
-                    }, localMessageId, true); // Pass localId as docId for optimistic
-
-                    messageInput.value = ''; // Clear input
-                    adjustTextareaHeight(); // Reset textarea height
-                    messagesSentToday++;
-                    updatePostLimitDisplay();
-                    
-                    // Clear typing status immediately after sending a message
-                    setTypingStatus(false);
-
-                    // Add message to Firestore
-                    await addDoc(collection(db, `chat_rooms/${currentRoomMood}/messages`), {
-                        userId: userId,
-                        nickname: currentNickname,
-                        genderSymbol: currentGenderSymbol,
-                        text: messageText,
-                        timestamp: serverTimestamp(), // Firestore's server timestamp
-                        localId: localMessageId // Store localId in Firestore for reconciliation
-                    });
-
-                } catch (e) {
-                    console.error("Error adding document: ", e);
-                    // Handle error: potentially remove the optimistically added message
-                    // or show a "Failed to send" status on it.
-                }
-            }
-
-            // --- Real-time Chat Setup (Firestore Listener) ---
-            function setupRealtimeChat() {
-                chatMessages.innerHTML = ''; // Clear initial example messages.
-
-                const q = query(collection(db, `chat_rooms/${currentRoomMood}/messages`), orderBy("timestamp"));
-                
-                onSnapshot(q, (snapshot) => {
-                    snapshot.docChanges().forEach((change) => {
-                        const message = change.doc.data();
-                        const docId = change.doc.id;
-
-                        if (change.type === "added") {
-                            // If this message was sent by the current user AND has a localId
-                            if (message.userId === userId && message.localId) {
-                                // Find the optimistically displayed message by its localId
-                                const optimisticElement = document.querySelector(`.message-bubble[data-local-id="${message.localId}"]`);
-                                if (optimisticElement) {
-                                    // If found, remove the optimistic element
-                                    optimisticElement.remove();
-                                    console.log("Removed optimistic message, now displaying real:", docId);
-                                }
-                            }
-                            // Always display the message coming from Firestore (real or confirmed)
-                            console.log("Displaying message from Firestore:", docId, message);
-                            displayMessage(message, docId); 
-                        } else if (change.type === "modified") {
-                            // Handle message modifications (e.g., reactions, edits)
-                            console.log("Modified message:", message);
-                            const existingMessageElement = document.querySelector(`.message-bubble[data-doc-id="${docId}"]`);
-                            if (existingMessageElement) {
-                                existingMessageElement.querySelector('p').textContent = message.text; // Simple update
-                            }
-                        } else if (change.type === "removed") {
-                            // Handle message deletions
-                            console.log("Removed message:", message);
-                            const existingMessageElement = document.querySelector(`.message-bubble[data-doc-id="${docId}"]`);
-                            if (existingMessageElement) {
-                                existingMessageElement.remove();
-                            }
-                        }
-                    });
-                    scrollToBottom(); // Scroll after new messages are added/updated
-                }, (error) => {
-                    console.error("Error listening to messages:", error);
-                    chatMessages.innerHTML = `<div class="text-center text-red-500 mt-8">Error loading messages. Check your Firebase rules and connection.</div>`;
-                });
-            }
-
-            // --- Display Message Function (Modified for consistency and optimistic flag) ---
-            function displayMessage(message, id, isOptimistic = false) {
-                // Before displaying, check if a real message with this docId already exists
-                if (document.querySelector(`.message-bubble[data-doc-id="${id}"]`) && !isOptimistic) {
-                    console.log("Skipping display of duplicate real message:", id);
-                    return;
-                }
-
-                const messageBubble = document.createElement('div');
-                messageBubble.classList.add('message-bubble', 'opacity-0');
-
-                if (isOptimistic) {
-                    messageBubble.setAttribute('data-local-id', id); // For optimistic messages
-                } else {
-                    messageBubble.setAttribute('data-doc-id', id); // For real messages from Firestore
-                }
-
-                // Determine if the message was sent by the current user
-                const isSentByCurrentUser = message.userId === userId;
-
-                if (isSentByCurrentUser) {
-                    messageBubble.classList.add('sent');
-                } else {
-                    messageBubble.classList.add('received');
-                }
-
-                const senderInfo = `${message.genderSymbol ? message.genderSymbol + ' ' : ''}${message.nickname}`;
-                
-                messageBubble.innerHTML = `
-                    <div class="sender-info">${senderInfo}</div>
-                    <p>${message.text}</p>
-                `; // Reaction container removed
-
-                chatMessages.appendChild(messageBubble);
-                setTimeout(() => messageBubble.classList.remove('opacity-0'), 10);
-            }
-
-            // --- Typing Indicator Logic ---
-            async function setTypingStatus(isTyping) {
-                if (!userId || !db || !currentRoomMood) return;
-
-                const typingDocRef = doc(db, `typing_indicators/${currentRoomMood}/${userId}`);
-
-                try {
-                    if (isTyping) {
-                        await setDoc(typingDocRef, {
-                            nickname: currentNickname,
-                            genderSymbol: currentGenderSymbol,
-                            timestamp: serverTimestamp() // Use server timestamp for accuracy
-                        });
-                    } else {
-                        // Delete the document when not typing
-                        await deleteDoc(typingDocRef);
-                    }
-                } catch (e) {
-                    console.error("Error setting typing status:", e);
-                }
-            }
-
-            // Debounce function for typing status updates
-            const debounce = (func, delay) => {
-                let timeout;
-                return function(...args) {
-                    const context = this;
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => func.apply(context, args), delay);
-                };
-            };
-
-            // This debounce is for *clearing* the typing status after a pause
-            const debouncedClearTypingStatus = debounce(() => setTypingStatus(false), TYPING_TIMEOUT_MS); 
-
-            messageInput.addEventListener('input', () => {
+                messageInput.value = '';
                 adjustTextareaHeight();
-                setTypingStatus(true); // Immediately set typing status on input
-                debouncedClearTypingStatus(); // Reset the timer to clear typing status
-            });
-            
-            // Listen for blur event to clear typing status if user leaves input field
-            messageInput.addEventListener('blur', () => {
-                setTypingStatus(false);
-                clearTimeout(debouncedClearTypingStatus); // Clear any pending debounced calls
-            });
+                updateUserMessageCount(); // Update count immediately after sending
+                // Reset typing status after sending
+                await updateDoc(doc(db, `private_chats/${privateChatId}/typingStatus`, myUserId), {
+                    isTyping: false,
+                    lastTypingTime: serverTimestamp()
+                });
 
-            // Listen for typing indicators from others
-            function setupTypingIndicatorListener() {
-                if (!db || !currentRoomMood) return;
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                alert("Failed to send message. Please try again.");
+            }
+        }
 
-                const q = collection(db, `typing_indicators/${currentRoomMood}`);
-                
-                onSnapshot(q, (snapshot) => {
-                    const typers = [];
-                    const now = Date.now();
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        // Only show if it's not our own typing status AND it's recent (e.g., within TYPING_TIMEOUT_MS * 1.5)
-                        // Using a slightly longer window than the debounce for robustness
-                        if (doc.id !== userId && data.timestamp && (now - data.timestamp.toMillis() < TYPING_TIMEOUT_MS * 1.5)) { 
-                            typers.push(data.nickname);
+        // Setup Real-time Chat Listener
+        function setupRealtimeChat() {
+            if (!privateChatId) {
+                console.error("Private chat ID is not available for real-time listener.");
+                return;
+            }
+
+            const messagesQuery = query(
+                collection(db, `private_chats/${privateChatId}/messages`),
+                orderBy('timestamp', 'asc'),
+                // Optionally limit number of messages to fetch initially
+                // limit(50) 
+            );
+
+            onSnapshot(messagesQuery, (snapshot) => {
+                let initialLoad = true; // Flag to detect initial load
+                if (messagesContainer.children.length > 0) {
+                    initialLoad = false;
+                }
+
+                snapshot.docChanges().forEach((change) => {
+                    const messageData = change.doc.data();
+                    const isMyMessage = messageData.senderId === myUserId;
+
+                    if (change.type === "added") {
+                        displayMessage(messageData, isMyMessage);
+                        if (!initialLoad) { // Only scroll to bottom if new messages arrive after initial load
+                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
                         }
-                    });
-
-                    if (typers.length > 0) {
-                        typingIndicatorElement.textContent = `${typers.join(', ')} is typing...`;
-                        typingIndicatorElement.classList.add('active');
-                    } else {
-                        typingIndicatorElement.textContent = '';
-                        typingIndicatorElement.classList.remove('active');
                     }
-                }, (error) => {
-                    console.error("Error listening to typing indicators:", error);
+                    // No "modified" or "removed" handling for messages in this basic setup
+                });
+                 // Ensure scroll to bottom on initial load too
+                 if (initialLoad) {
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                 }
+            });
+        }
+
+        // Typing Status
+        let typingTimeout;
+        let isTyping = false;
+
+        async function updateTypingStatus(status) {
+            if (!privateChatId || !myUserId) return;
+
+            // Only update Firestore if status changes or after a delay
+            if (isTyping !== status) {
+                isTyping = status;
+                const typingRef = doc(db, `private_chats/${privateChatId}/typingStatus`, myUserId);
+                await updateDoc(typingRef, {
+                    isTyping: status,
+                    lastTypingTime: serverTimestamp()
                 });
             }
+        }
 
-            // --- Message Cleanup Logic ---
-            async function cleanOldMessages() {
-                if (!db || !currentRoomMood) {
-                    console.warn("Firestore not initialized or room mood not set for cleanup.");
-                    return;
-                }
-
-                const sixHoursAgo = new Date(Date.now() - MESSAGE_LIFESPAN_HOURS * 60 * 60 * 1000);
-                console.log(`Attempting to clean messages older than: ${sixHoursAgo.toLocaleString()}`);
-
-                try {
-                    const messagesRef = collection(db, `chat_rooms/${currentRoomMood}/messages`);
-                    const q = query(messagesRef, where("timestamp", "<", sixHoursAgo));
-                    
-                    const querySnapshot = await getDocs(q);
-                    
-                    if (querySnapshot.empty) {
-                        console.log("No old messages to clean up.");
-                        return;
-                    }
-
-                    const deletePromises = [];
-                    querySnapshot.forEach((docToDelete) => {
-                        console.log(`Deleting message: ${docToDelete.id}`);
-                        deletePromises.push(deleteDoc(doc(db, `chat_rooms/${currentRoomMood}/messages`, docToDelete.id)));
-                    });
-
-                    await Promise.all(deletePromises);
-                    console.log(`Cleaned up ${querySnapshot.size} old messages.`);
-
-                } catch (error) {
-                    console.error("Error during message cleanup:", error);
-                }
-            }
-
-
-            // --- Post Limit Logic (using localStorage for daily reset) ---
-            function updatePostLimitDisplay() {
-                const remaining = MAX_POSTS_PER_DAY - messagesSentToday;
-                postLimitDisplay.textContent = `Posts left today: ${remaining}`;
-                if (remaining <= 0) {
-                    messageInput.placeholder = "Daily limit reached. Go Premium!";
-                    messageInput.disabled = true;
-                    sendButton.disabled = true;
-                    messageInput.classList.add('opacity-50', 'cursor-not-allowed');
-                    sendButton.classList.add('opacity-50', 'cursor-not-allowed');
-                    setTypingStatus(false); // Ensure typing status is cleared if limit is reached
-                } else {
-                    messageInput.placeholder = "Share your thoughts...";
-                    messageInput.disabled = false;
-                    sendButton.disabled = false;
-                    messageInput.classList.remove('opacity-50', 'cursor-not-allowed');
-                    sendButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                }
-            }
-
-            function checkDailyPostLimit() {
-                const lastPostDate = localStorage.getItem('soulchat_last_post_date');
-                const today = new Date().toDateString();
-
-                if (lastPostDate === today) {
-                    messagesSentToday = parseInt(localStorage.getItem('soulchat_posts_today') || '0');
-                } else {
-                    messagesSentToday = 0; // Reset for a new day
-                    localStorage.setItem('soulchat_last_post_date', today);
-                }
-                updatePostLimitDisplay();
-            }
-
-            // Save post count on send
-            sendButton.addEventListener('click', () => {
-                sendMessage();
-                localStorage.setItem('soulchat_posts_today', messagesSentToday.toString());
-            });
-
-            messageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault(); // Prevent new line
-                    sendButton.click();
-                }
-            });
-
-            // --- Auto-adjust textarea height ---
-            function adjustTextareaHeight() {
-                messageInput.style.height = 'auto'; // Reset height
-                messageInput.style.height = messageInput.scrollHeight + 'px'; // Set to scroll height
-            }
-            // Event listener for input already exists, no change needed here.
-
-            // --- Auto-scroll to bottom, but pause on user scroll up ---
-            let isUserScrolling = false;
-            let scrollTimeout;
-
-            chatMessages.addEventListener('scroll', () => {
-                clearTimeout(scrollTimeout);
-                isUserScrolling = chatMessages.scrollHeight - chatMessages.clientHeight > chatMessages.scrollTop + 20; 
-                scrollTimeout = setTimeout(() => {
-                    isUserScrolling = false; 
-                }, 500); 
-            });
-
-            function scrollToBottom() {
-                if (!isUserScrolling) {
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                }
-            }
-
-            // --- Daily Reflection Modal ---
-            function showDailyReflectionModal() {
-                const lastModalDate = localStorage.getItem('soulchat_last_modal_date');
-                const today = new Date().toDateString();
-
-                if (lastModalDate !== today) {
-                    dailyReflectionModal.classList.add('active');
-                    localStorage.setItem('soulchat_last_modal_date', today);
-                }
-            }
-
-            closeReflectionModalButton.addEventListener('click', () => {
-                dailyReflectionModal.classList.remove('active');
-            });
-
-            // --- Payment Prompt Modal ---
-            function showPaymentModal() {
-                paymentModal.classList.add('active');
-            }
-
-            closePaymentModalButton.addEventListener('click', () => {
-                paymentModal.classList.remove('active');
-            });
-
-            premiumButton.addEventListener('click', () => {
-                alert("Redirecting to premium subscription page! (Placeholder)");
-                paymentModal.classList.remove('active');
-            });
-
-            // --- Theme Switcher Logic ---
-            currentThemeIndex = themeNamesOrder.indexOf(currentRoomMood); 
-            if (currentThemeIndex === -1) { 
-                currentThemeIndex = 0; 
-            }
-            currentThemeName = themeNamesOrder[currentThemeIndex]; 
-
-            themeSwitcherButton.addEventListener('click', () => {
-                document.body.classList.remove(visualThemes[currentThemeName].class);
-                currentThemeIndex = (currentThemeIndex + 1) % themeNamesOrder.length;
-                currentThemeName = themeNamesOrder[currentThemeIndex]; 
-                document.body.classList.add(visualThemes[currentThemeName].class);
-            });
-
-
-            // Initial calls
-            checkDailyPostLimit();
+        messageInput.addEventListener('input', () => {
             adjustTextareaHeight();
-            showDailyReflectionModal(); 
+            updateTypingStatus(true);
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                updateTypingStatus(false);
+            }, 3000); // User stops typing for 3 seconds
+        });
+
+        // Listen for other users' typing status
+        function setupTypingIndicatorListener() {
+            if (!privateChatId) return;
+
+            const typingStatusCollectionRef = collection(db, `private_chats/${privateChatId}/typingStatus`);
+            onSnapshot(typingStatusCollectionRef, (snapshot) => {
+                let someoneIsTyping = false;
+                snapshot.docChanges().forEach((change) => {
+                    const data = change.doc.data();
+                    if (change.doc.id !== myUserId && data.isTyping) {
+                        // Check if typing status is recent (e.g., within last 5 seconds)
+                        if (data.lastTypingTime && (new Date().getTime() / 1000 - data.lastTypingTime.seconds < 5)) {
+                            someoneIsTyping = true;
+                        }
+                    }
+                });
+                if (someoneIsTyping) {
+                    typingIndicator.classList.remove('hidden');
+                } else {
+                    typingIndicator.classList.add('hidden');
+                }
+            });
+        }
+
+        // Daily Limit Logic
+        function isSameDay(d1, d2) {
+            if (!d1 || !d2) return false;
+            return d1.getFullYear() === d2.getFullYear() &&
+                   d1.getMonth() === d2.getMonth() &&
+                   d1.getDate() === d2.getDate();
+        }
+
+        async function getUserDailyStats() {
+            if (!myUserId) return;
+            const userRef = doc(db, "users", myUserId); // Assuming a 'users' collection to store user-specific data
+            const docSnap = await getDoc(userRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                userMessageCount = data.messageCountToday || 0;
+                lastPostDate = data.lastPostDate ? data.lastPostDate.toDate() : null;
+                isPremiumUser = data.isPremium || false; // Check for premium status
+            } else {
+                // Initialize if user document doesn't exist
+                userMessageCount = 0;
+                lastPostDate = null;
+                isPremiumUser = false;
+                await updateDoc(userRef, { messageCountToday: 0, lastPostDate: null, isPremium: false }, { merge: true });
+            }
+        }
+
+        async function updateUserMessageCount() {
+            if (!myUserId) return;
+            const userRef = doc(db, "users", myUserId);
+            const now = new Date();
+
+            if (!isSameDay(lastPostDate, now)) {
+                // New day, reset count
+                userMessageCount = 1;
+            } else {
+                userMessageCount++;
+            }
+            lastPostDate = now;
+
+            await updateDoc(userRef, {
+                messageCountToday: userMessageCount,
+                lastPostDate: serverTimestamp()
+            });
+            checkDailyPostLimit();
+        }
+
+        function checkDailyPostLimit() {
+            if (!isPremiumUser && userMessageCount >= MESSAGE_LIMIT && !isSameDay(lastPostDate, new Date())) {
+                showPaymentModal();
+            }
+        }
+        
+        // --- Modal Control ---
+        function showDailyReflectionModal() {
+            dailyReflectionModal.classList.add('active');
+        }
+
+        closeReflectionModalButton.addEventListener('click', () => {
+            dailyReflectionModal.classList.remove('active');
+        });
+
+        function showPaymentModal() {
+            paymentModal.classList.add('active');
+        }
+
+        closePaymentModalButton.addEventListener('click', () => {
+            paymentModal.classList.remove('active');
+        });
+
+        premiumButton.addEventListener('click', () => {
+            alert("Redirecting to premium subscription page! (Placeholder)");
+            paymentModal.classList.remove('active');
+            // In a real app, this would handle premium purchase and update isPremiumUser to true
+        });
+
+        // --- Theme Switcher Logic ---
+        themeSwitcherButton.addEventListener('click', () => {
+            document.body.classList.remove(visualThemes[currentThemeName].class);
+            currentThemeIndex = (currentThemeIndex + 1) % themeNamesOrder.length;
+            currentThemeName = themeNamesOrder[currentThemeIndex]; 
+            document.body.classList.add(visualThemes[currentThemeName].class);
+        });
+
+        // --- Event Listeners & Initialization ---
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault(); // Prevent new line
+                sendMessage();
+            }
+        });
+
+        backButton.addEventListener('click', () => {
+            window.location.href = 'log.html'; // Go back to the login/chat initiation page
+        });
+
+        // Main Initialization on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            myUserId = urlParams.get('myUserId'); // This will be the actual Firebase UID
+            targetUserId = urlParams.get('targetUserId'); // This will be the target user's email
+            privateChatId = urlParams.get('privateChatId'); // This will be the chat ID using sorted emails
+
+            if (!myUserId || !targetUserId || !privateChatId) {
+                alert("Missing chat parameters. Redirecting to login.");
+                window.location.href = 'log.html';
+                return;
+            }
+
+            // Get current user's email from Firebase Auth, which is typically `user.email`
+            onAuthStateChanged(auth, async (user) => {
+                // IMPORTANT: Ensure the user is logged in AND their UID matches the 'myUserId' from URL
+                if (user && user.uid === myUserId) {
+                    myEmail = user.email;
+                    // Update chat title to reflect participants
+                    chatTitle.textContent = `Chat with ${targetUserId.split('__DOT__').join('.').split('@')[0] || targetUserId.split('__DOT__').join('.')}`; // Display target user's email prefix or full email (reversing __DOT__)
+                    
+                    // Initial setup of chat elements
+                    setupRealtimeChat();
+                    setupTypingIndicatorListener();
+                    await getUserDailyStats(); // Load user's message stats
+                    checkDailyPostLimit();
+                    adjustTextareaHeight();
+                    showDailyReflectionModal(); // Show reflection modal on entry
+                } else {
+                    // User is not logged in, or the UID from the URL does not match the currently logged-in user
+                    alert("Authentication required or mismatched user. Please log in with your correct account.");
+                    window.location.href = 'log.html';
+                }
+            });
         });
     </script>
 </body>
