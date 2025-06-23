@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoulChat - Login & Private Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom CSS variables for pastel themes */
+        :root {
+            --color-lavender: #E6E6FA;
+            --color-sky-blue: #87CEEB;
+            --color-mint: #B0E0E6;
+            --color-peach: #FFDAB9;
+            --color-soft-gray: #f7f7f7;
+            --color-dark-text: #333;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--color-sky-blue) 0%, var(--color-mint) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Center vertically */
+            align-items: center;
+            min-height: 100vh;
+            color: var(--color-dark-text);
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, var(--color-peach) 0%, var(--color-lavender) 100%);
+        }
+
+        .entry-card {
+            background-color: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 2rem;
+            padding: 2.5rem;
+            max-width: 90%;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            
+            @media (min-width: 768px) {
+                max-width: 450px;
+            }
+        }
+    </style>
+</head>
+<body class="selection:bg-pink-100 selection:text-pink-800">
+
+    <div class="entry-card">
+        <div class="hero-gradient p-6 rounded-t-2xl -mt-10 mx-auto w-full max-w-full -mb-4">
+            <h1 class="text-4xl font-bold text-white mb-2 leading-tight">SoulChat</h1>
+            <p class="text-white text-opacity-80 text-lg">Your private connection space.</p>
+        </div>
+
+        <p class="text-gray-600 text-md mt-6 mb-8 px-4">
+            Log in to chat privately.
+        </p>
+
+        <div class="space-y-6">
+            <div>
+                <label for="email-input" class="block text-left text-gray-700 text-sm font-medium mb-2">Email:</label>
+                <input
+                    type="email"
+                    id="email-input"
+                    placeholder="your@example.com"
+                    class="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-blue"
+                >
+            </div>
+
+            <div>
+                <label for="password-input" class="block text-left text-gray-700 text-sm font-medium mb-2">Password:</label>
+                <input
+                    type="password"
+                    id="password-input"
+                    placeholder="••••••••"
+                    class="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-blue"
+                >
+            </div>
+
+            <button
+                id="login-button"
+                class="w-full py-3 px-6 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl text-lg transition-all duration-300 ease-in-out shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"
+            >
+                Log In
+            </button>
+
+            <p id="error-message" class="text-red-500 text-sm mt-2 hidden"></p>
+
+            <hr class="my-6 border-t border-gray-200">
+
+            <div>
+                <label for="target-user-email-input" class="block text-left text-gray-700 text-sm font-medium mb-2">Chat with Email (of registered user):</label>
+                <input
+                    type="email"
+                    id="target-user-email-input"
+                    placeholder="friend@example.com"
+                    class="w-full p-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-blue"
+                >
+            </div>
+
+            <button
+                id="start-chat-button"
+                class="w-full py-3 px-6 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl text-lg transition-all duration-300 ease-in-out shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75"
+            >
+                Start Private Chat
+            </button>
+        </div>
+
+        <p class="text-gray-600 text-sm mt-4">
+            Don't have an account? <a href="index.html" class="text-blue-500 hover:underline font-medium">Sign up here</a>
+        </p>
+
+        <p class="text-xs text-gray-400 mt-6 px-4">
+            This demo uses basic email/password authentication. No actual personal data is stored beyond what Firebase requires for authentication and chat.
+        </p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+        // If you're using Analytics as per your config:
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
+
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDWwgK8_f8be_538Nl4G4RTZ9mrpTQaCXg",
+            authDomain: "privatechat2015.firebaseapp.com",
+            projectId: "privatechat2015",
+            storageBucket: "privatechat2015.firebasestorage.app",
+            messagingSenderId: "1067656879486",
+            appId: "1:1067656879486:web:a65799372ed5badc80a72f",
+            measurementId: "G-7XH414JB93"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        // Initialize Analytics if needed, as per your config
+        const analytics = getAnalytics(app);
+
+
+        // DOM Elements
+        const emailInput = document.getElementById('email-input');
+        const passwordInput = document.getElementById('password-input');
+        const loginButton = document.getElementById('login-button');
+        const targetUserEmailInput = document.getElementById('target-user-email-input');
+        const startChatButton = document.getElementById('start-chat-button');
+        const errorMessage = document.getElementById('error-message');
+
+        let currentFirebaseUser = null; // Stores the logged-in Firebase user object
+
+        function showErrorMessage(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+        }
+
+        function clearErrorMessage() {
+            errorMessage.textContent = '';
+            errorMessage.classList.add('hidden');
+        }
+
+        // Handle login
+        loginButton.addEventListener('click', async () => {
+            clearErrorMessage();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (!email || !password) {
+                showErrorMessage("Please enter both email and password.");
+                return;
+            }
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                currentFirebaseUser = userCredential.user;
+                alert(`Logged in as: ${currentFirebaseUser.email}`);
+                // You can pre-fill the target user email if needed, or simply wait for chat initiation
+            } catch (error) {
+                console.error("Login failed:", error.code, error.message);
+                let displayMessage = "Login failed. Please try again.";
+                if (error.code === 'auth/invalid-email') {
+                    displayMessage = "Invalid email format.";
+                } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    displayMessage = "Incorrect email or password.";
+                }
+                showErrorMessage(displayMessage);
+            }
+        });
+
+        // Handle starting chat
+        startChatButton.addEventListener('click', async () => {
+            clearErrorMessage();
+
+            if (!currentFirebaseUser) {
+                showErrorMessage("Please log in first before starting a chat.");
+                return;
+            }
+
+            const myUserId = currentFirebaseUser.uid;
+            const targetUserEmail = targetUserEmailInput.value.trim();
+
+            if (!targetUserEmail) {
+                showErrorMessage("Please enter the email of the user you want to chat with.");
+                targetUserEmailInput.focus();
+                return;
+            }
+
+            if (currentFirebaseUser.email === targetUserEmail) {
+                showErrorMessage("You cannot chat with yourself. Please enter a different target email.");
+                targetUserEmailInput.focus();
+                return;
+            }
+
+            // In a real application, you might need to resolve targetUserEmail to a targetUserId (UID)
+            // if you strictly use UIDs for chat room IDs. For this demo, we'll pass the email
+            // as targetUserId and let chat.html handle its display.
+            // If you need actual UID for targetUser, you'd query a 'users' collection for the UID
+            // based on the email (e.g., using a Cloud Function or a simple query if your security rules allow).
+            // For now, we'll just pass the email as targetIdentifier.
+
+            const targetIdentifier = targetUserEmail; // We'll use email as the identifier for now
+
+            // Create a consistent privateChatId based on sorted UIDs for direct chat
+            // For this, we'd ideally need the target user's UID. Since we only have their email here,
+            // we'll make a pragmatic choice: use sorted emails for the chat ID.
+            // THIS ASSUMES EMAILS ARE UNIQUE AND STABLE IDENTIFIERS FOR CHAT ID CREATION.
+            const chatParticipants = [currentFirebaseUser.email, targetUserEmail].sort();
+            const privateChatId = chatParticipants.join('_').replace(/\./g, '__DOT__'); // Replace '.' for Firestore doc IDs
+
+            console.log(`Attempting to start private chat between ${myUserId} (${currentFirebaseUser.email}) and ${targetUserEmail} with ID: ${privateChatId}`);
+
+            // Redirect to chat.html with necessary parameters
+            window.location.href = `chat.html?myUserId=${encodeURIComponent(myUserId)}&targetUserId=${encodeURIComponent(targetUserEmail)}&privateChatId=${encodeURIComponent(privateChatId)}`;
+        });
+
+        // Check for existing login session on page load
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentFirebaseUser = user;
+                emailInput.value = user.email; // Pre-fill email if logged in
+                // Optionally hide login fields or show a "Logged in as..." message
+                loginButton.textContent = "Logged In (Click to Logout)";
+                loginButton.removeEventListener('click', loginButton.onclick); // Remove original login listener
+                loginButton.addEventListener('click', async () => { // Add logout listener
+                    try {
+                        await signOut(auth);
+                        alert("Logged out successfully.");
+                        window.location.reload(); // Reload page to reset state
+                    } catch (e) {
+                        console.error("Logout error:", e);
+                        showErrorMessage("Failed to log out.");
+                    }
+                });
+            } else {
+                currentFirebaseUser = null;
+                loginButton.textContent = "Log In";
+                emailInput.value = '';
+                passwordInput.value = '';
+            }
+        });
+
+        // Pre-fill email if redirected from signup page
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const signupEmail = urlParams.get('signupEmail');
+            if (signupEmail) {
+                emailInput.value = decodeURIComponent(signupEmail);
+                passwordInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>
