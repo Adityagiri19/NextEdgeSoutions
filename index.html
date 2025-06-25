@@ -3,120 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SoulChat - Feel. Share. Heal.</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts - Poppins -->
+    <title>MoodChat - Feel. Share. Heal.</title> <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         /* Custom CSS variables for pastel themes */
         :root {
-            --color-lavender: #E6E6FA;
-            --color-sky-blue: #87CEEB;
-            --color-mint: #B0E0E6;
-            --color-peach: #FFDAB9;
-            --color-soft-gray: #f7f7f7;
-            --color-dark-text: #333;
+            --color-lavender: #E6E6FA; /* Light purple */
+            --color-sky-blue: #87CEEB; /* Medium blue */
+            --color-mint: #B0E0E6; /* Light blue-green */
+            --color-peach: #FFDAB9; /* Light orange/pink */
+            --color-soft-gray: #f0f4f8; /* A slightly warmer, very light gray */
+            --color-dark-text: #2c3e50; /* Darker, softer black for text */
+            --color-accent-blue: #6a9eff; /* A friendly blue for main button */
+            --color-shadow-light: rgba(0, 0, 0, 0.05);
+            --color-shadow-medium: rgba(0, 0, 0, 0.1);
         }
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, var(--color-sky-blue) 0%, var(--color-mint) 100%);
+            /* Updated background gradient for a softer, more inviting feel */
+            background: linear-gradient(135deg, #e0f2f7 0%, #d1e5ed 100%); /* Lighter, more subtle blue gradient */
             display: flex;
-            flex-direction: column; /* Changed to column to stack header and main content */
-            justify-content: flex-start; /* Align items to the start for header placement */
+            flex-direction: column;
+            justify-content: flex-start;
             align-items: center;
             min-height: 100vh;
             color: var(--color-dark-text);
-            padding: 1rem; /* Add some overall padding for smaller screens */
-            box-sizing: border-box; /* Include padding in element's total width and height */
+            padding: 1.5rem; /* Increased overall padding */
+            box-sizing: border-box;
+        }
+
+        /* Added text shadow for main title */
+        .text-shadow-lg {
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .hero-gradient {
+            /* Kept existing gradient but refined padding/margins for better flow */
             background: linear-gradient(135deg, var(--color-peach) 0%, var(--color-lavender) 100%);
+            padding: 2rem; /* Increased padding */
+            border-radius: 2rem 2rem 0 0; /* Keep top rounded, bottom sharp for seamless merge with card */
+            margin-top: -2.5rem; /* Adjusted to slightly overlap with card for smoother transition */
+            margin-bottom: 0; /* Remove negative margin to avoid overlap issues below */
+            position: relative; /* Ensure z-index works */
+            z-index: 1; /* Place above the card's initial flat plane */
         }
 
         .entry-card {
             background-color: white;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            border-radius: 2rem; /* More rounded */
-            padding: 2.5rem;
-            max-width: 90%; /* Max width for responsiveness on smaller screens */
-            width: 100%; /* Take full available width within max-width */
+            /* Refined box shadow for a softer, more professional lift */
+            box-shadow: 0 15px 35px var(--color-shadow-medium), 0 5px 15px var(--color-shadow-light);
+            border-radius: 2rem;
+            padding: 2.5rem; /* Consistent padding */
+            max-width: 90%;
+            width: 100%;
             text-align: center;
             position: relative;
-            z-index: 10;
-            margin-top: 2rem; /* Space between header and the box */
+            z-index: 5; /* Ensure it's above other elements if needed */
 
-            /* Added explicit max-width for larger screens for better control */
+            /* Adjusted margin-top to align with header better and accommodate hero-gradient */
+            margin-top: 2rem; /* Space from header */
+
             @media (min-width: 768px) {
                 max-width: 450px;
-                margin-top: 4rem; /* More space on larger screens */
+                margin-top: 4rem;
             }
         }
 
+        /* Combined button styles for consistency */
         .mood-selector button,
-        .gender-selector button { /* Apply similar styling to gender buttons */
-            transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+        .gender-selector button {
+            transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid transparent; /* Subtle border for consistency */
+            position: relative;
+            z-index: 1;
+            padding: 1rem; /* Consistent padding for buttons */
         }
+
+        .mood-selector button i,
+        .gender-selector button i {
+            margin-bottom: 0.5rem; /* Increased space between icon and text */
+            font-size: 1.8rem; /* Slightly larger icons */
+        }
+
+        .mood-selector button span,
+        .gender-selector button span {
+            font-size: 0.9rem; /* Slightly smaller text for better icon prominence */
+            font-weight: 500;
+        }
+
+        /* Improved hover state */
         .mood-selector button:hover,
         .gender-selector button:hover {
-            transform: translateY(-3px);
+            background-color: var(--color-soft-gray); /* Lighter hover */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Clearer hover shadow */
+            border-color: rgba(0, 0, 0, 0.05); /* Subtle border on hover */
         }
+
+        /* Refined selected state */
         .mood-selector button.selected {
             background-color: var(--color-peach);
-            transform: scale(1.1);
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2); /* More prominent shadow for selected */
+            border-color: var(--color-peach); /* Solid border to match background */
+            z-index: 2;
+            color: white; /* Text color for selected mood button */
         }
-        .gender-selector button.selected { /* Specific selected style for gender buttons */
-            background-color: var(--color-mint); /* A slightly different pastel for distinction */
-            transform: scale(1.1);
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .testimonial-bubble {
-            background-color: rgba(255, 255, 255, 0.7);
-            border-radius: 1.5rem;
-            padding: 0.75rem 1.25rem;
-            font-size: 0.9rem;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            display: inline-block;
-            margin: 0.5rem;
-            max-width: 250px;
+        .mood-selector button.selected i,
+        .mood-selector button.selected span {
+             color: white; /* Ensure icon and text are white on selected */
         }
 
-        /* Specific styles for responsive testimonial layout */
+
+        .gender-selector button.selected {
+            background-color: var(--color-mint);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+            border-color: var(--color-mint);
+            z-index: 2;
+            color: var(--color-dark-text); /* Keep dark text for mint selected gender */
+        }
+        /* Specific override for selected gender icons to ensure dark text */
+        .gender-selector button.selected i,
+        .gender-selector button.selected span {
+            color: var(--color-dark-text);
+        }
+
+        /* Main action button styling */
+        #enter-room-button {
+            background-color: var(--color-accent-blue); /* New accent blue */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15); /* More pronounced shadow */
+            border: none; /* Ensure no default border */
+        }
+        #enter-room-button:hover {
+            background-color: #5a8ee2; /* Slightly darker hover for accent blue */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+        #enter-room-button:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(106, 158, 255, 0.5); /* Blue ring for focus */
+        }
+
+
+        /* Styles for the new instructions section */
+        .instructions-card {
+            background-color: #f7f7f7; /* Changed to a very light gray/off-white for contrast */
+            color: var(--color-dark-text); /* Darker text for readability */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); /* Softer shadow */
+            border-radius: 2rem;
+            padding: 2.5rem; /* Consistent padding */
+            max-width: 90%;
+            width: 100%;
+            text-align: left;
+            margin-top: 2.5rem; /* Increased margin from the entry card */
+            margin-bottom: 2rem; /* Margin at the bottom */
+        }
+        .instructions-card h2 {
+            color: var(--color-dark-text); /* Ensure headings are dark text */
+        }
+        .instructions-card h3 {
+            color: var(--color-dark-text);
+        }
+        .instructions-card p {
+            color: #555; /* Slightly lighter body text for instructions */
+        }
+        .instructions-card strong {
+            color: var(--color-dark-text); /* Ensure strong text is dark */
+        }
+        .instructions-card ol li {
+            margin-bottom: 0.5rem; /* Spacing between list items */
+        }
+        .instructions-card .text-sm {
+            color: #777; /* Lighter privacy text */
+        }
+
+
+        /* Specific styles for responsive layout */
         @media (min-width: 768px) {
-            .testimonials-grid {
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            .entry-card, .instructions-card {
+                max-width: 450px;
             }
         }
     </style>
 </head>
 <body class="selection:bg-pink-100 selection:text-pink-800">
 
-    <!-- Header for Logo (can be text or image) -->
     <header class="w-full text-center py-4 px-4 sm:px-6">
-        <h1 class="text-4xl font-extrabold text-white text-shadow-md">SoulChat</h1>
-        <!-- Placeholder for a logo image, uncomment and replace src if you have one -->
-        <!-- <img src="https://placehold.co/150x50/FFFFFF/333333?text=SoulChat%20Logo" alt="SoulChat Logo" class="h-12 mx-auto"> -->
-    </header>
+        <h1 class="text-4xl font-extrabold text-white text-shadow-lg">MoodChat</h1> </header>
 
     <div class="entry-card">
-        <!-- Hero Banner -->
-        <div class="hero-gradient p-6 rounded-t-2xl -mt-10 mx-auto w-full max-w-full -mb-4">
+        <div class="hero-gradient">
             <h1 class="text-4xl font-bold text-white mb-2 leading-tight">Feel. Share. Heal.</h1>
             <p class="text-white text-opacity-80 text-lg">Your safe space to connect.</p>
         </div>
 
-        <!-- Purpose -->
         <p class="text-gray-600 text-md mt-6 mb-8 px-4">
             Share your thoughts anonymously. Join comforting conversations and find support.
         </p>
 
-        <!-- Entry Card Content -->
         <div class="space-y-6">
             <div>
                 <label for="nickname-input" class="block text-left text-gray-700 text-sm font-medium mb-2">Your anonymous identity:</label>
@@ -131,39 +218,52 @@
             <div>
                 <label class="block text-left text-gray-700 text-sm font-medium mb-2">I identify as:</label>
                 <div id="gender-selector" class="gender-selector grid grid-cols-2 gap-2">
-                    <button type="button" data-gender="Male" data-symbol="♂" class="p-3 bg-gray-100 rounded-xl text-lg sm:text-xl md:text-2xl hover:bg-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-mint">♂ Male</button>
-                    <button type="button" data-gender="Female" data-symbol="♀" class="p-3 bg-gray-100 rounded-xl text-lg sm:text-xl md:text-2xl hover:bg-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-mint">♀ Female</button>
+                    <button type="button" data-gender="Male" data-symbol="♂" class="p-3 bg-gray-100 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-mint">
+                        <i class="fa-solid fa-person"></i> <span>Male</span>
+                    </button>
+                    <button type="button" data-gender="Female" data-symbol="♀" class="p-3 bg-gray-100 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-mint">
+                        <i class="fa-solid fa-person-dress"></i> <span>Female</span>
+                    </button>
                 </div>
             </div>
 
             <div>
                 <label class="block text-left text-gray-700 text-sm font-medium mb-2">How are you feeling today?</label>
                 <div id="mood-selector" class="mood-selector grid grid-cols-3 gap-2">
-                    <button type="button" data-mood="Comfort" class="p-3 bg-gray-100 rounded-xl text-2xl hover:bg-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-peach">🫂</button>
-                    <button type="button" data-mood="Joy" class="p-3 bg-gray-100 rounded-xl text-2xl hover:bg-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-peach">😊</button>
-                    <button type="button" data-mood="Sadness" class="p-3 bg-gray-100 rounded-xl text-2xl hover:bg-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-peach">😔</button>
+                    <button type="button" data-mood="Comfort" class="p-3 bg-gray-100 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-peach">
+                        <i class="fa-solid fa-hand-holding-heart"></i> <span>Comfort</span>
+                    </button>
+                    <button type="button" data-mood="Joy" class="p-3 bg-gray-100 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-peach">
+                        <i class="fa-solid fa-face-smile"></i> <span>Joy</span>
+                    </button>
+                    <button type="button" data-mood="Sadness" class="p-3 bg-gray-100 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-peach">
+                        <i class="fa-solid fa-face-frown"></i> <span>Sadness</span>
+                    </button>
                 </div>
             </div>
 
             <button
                 id="enter-room-button"
-                class="w-full py-3 px-6 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl text-lg transition-all duration-300 ease-in-out shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"
+                class="w-full py-3 px-6 text-white font-semibold rounded-xl text-lg transition-all duration-300 ease-in-out shadow-md hover:shadow-lg focus:outline-none"
             >
                 Enter Room
             </button>
         </div>
+    </div>
 
-        <!-- Testimonial bubbles -->
-        <div class="mt-8 text-sm text-gray-500 grid testimonials-grid gap-3 justify-items-center">
-            <div class="testimonial-bubble">"I felt lighter after 5 minutes here." – Anonymous</div>
-            <div class="testimonial-bubble">"Finally a safe space to share." – A Friend</div>
-            <div class="testimonial-bubble">"The UI is so calming and clean." – Happy User</div>
-        </div>
+    <div class="instructions-card">
+        <h2 class="text-3xl font-bold mb-4">Welcome to MoodChat!</h2>
+        <p class="mb-4">MoodChat is a safe and anonymous space designed for you to express your feelings and connect with others who might be experiencing similar emotions.</p>
 
-        <!-- Privacy first note -->
-        <p class="text-xs text-gray-400 mt-6 px-4">
-            You don’t need to log in. No personal data is stored about you.
-        </p>
+        <h3 class="text-xl font-semibold mb-3">How to use it:</h3>
+        <ol class="list-decimal list-inside space-y-2">
+            <li><strong>Your anonymous identity:</strong> A unique nickname is generated for you.</li>
+            <li><strong>Identify as:</strong> Select your gender identity for relevant conversations.</li>
+            <li><strong>How are you feeling today?:</strong> Choose your current mood to join a suitable chat room.</li>
+            <li><strong>Enter Room:</strong> Click to join the MoodChat community.</li>
+        </ol>
+
+        <p class="mt-6 text-sm">Your privacy is our priority. You don’t need to log in, and no personal data is stored about you.</p>
     </div>
 
     <script>
@@ -198,19 +298,22 @@
 
             moodSelector.addEventListener('click', (event) => {
                 const target = event.target;
-                if (target.tagName === 'BUTTON' && target.dataset.mood) {
+                // Find the button element, even if an icon or span inside is clicked
+                const button = target.closest('button');
+                if (button && button.dataset.mood) {
                     const currentSelected = moodSelector.querySelector('.selected');
                     if (currentSelected) {
                         currentSelected.classList.remove('selected');
                     }
-                    target.classList.add('selected');
-                    selectedMood = target.dataset.mood;
+                    button.classList.add('selected');
+                    selectedMood = button.dataset.mood;
                     console.log(`Selected Mood: ${selectedMood}`);
                 }
             });
 
             genderSelector.addEventListener('click', (event) => {
                 const target = event.target;
+                // Find the button element, even if an icon or span inside is clicked
                 const button = target.closest('button');
                 if (button && button.dataset.gender) {
                     const currentSelected = genderSelector.querySelector('.selected');
